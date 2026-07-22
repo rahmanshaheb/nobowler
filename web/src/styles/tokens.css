@@ -1,0 +1,67 @@
+/* tokens.css — Original design, matched to match day screenshot */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #102564;
+}
+
+#root {
+  min-height: 100vh;
+  background: #102564;
+}
+
+:root {
+
+  /* ── Colours ─────────────────────────────────────────────────── */
+  --color-navy-900:       #102564;
+  --color-navy-800:       #102564;
+  --color-border:         #648BC3;
+
+  --color-text-primary:   #ffffff;
+  --color-text-secondary: #7a90b4;
+
+  --color-yellow:         #f5c842;
+  --color-yellow-text:    #111827;
+
+  --color-mint:           #3ecf8e;
+  --color-mint-bg:        rgba(62,207,142,0.12);
+
+  --color-key-bg:         #c5d8f7;
+  --color-key-bg-pressed: #a8c2ef;
+
+  --color-coral:          #ef7b5e;
+  --color-coral-bg:       rgba(232,83,58,0.12);
+
+  /* ── Fonts ───────────────────────────────────────────────────── */
+  --font-display: 'Sora', system-ui, -apple-system, sans-serif;
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+
+  /* ── Spacing ─────────────────────────────────────────────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  24px;
+  --space-6:  32px;
+  --space-7:  48px;
+  --space-8:  64px;
+
+  /* ── Radius ──────────────────────────────────────────────────── */
+  --radius-pill: 9999px;
+  --radius-key:  16px;
+  --radius-card: 20px;
+
+  /* ── Motion ──────────────────────────────────────────────────── */
+  --transition-fast:   150ms ease;
+  --transition-medium: 300ms ease;
+}
+
+/* ── Global focus ring for all inputs ───────────────────────── */
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-yellow) !important;
+  box-shadow: 0 0 0 3px rgba(245, 200, 66, 0.2);
+}

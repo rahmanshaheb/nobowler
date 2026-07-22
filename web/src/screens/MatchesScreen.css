@@ -1,0 +1,116 @@
+/* MatchesScreen.css */
+
+.matches-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-navy-900);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) 16px var(--space-6);
+  box-sizing: border-box;
+}
+
+.matches-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  position: relative;
+}
+
+.matches-back {
+  background: none;
+  border: none;
+  color: var(--color-yellow);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  text-align: left;
+  position: relative;
+  z-index: 1;
+}
+
+.matches-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.matches-legend {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  padding: 0 4px;
+  margin-top: var(--space-5);
+  text-align: left;
+  line-height: 1.5;
+}
+
+.matches-legend svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.matches-empty {
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  text-align: center;
+  padding: var(--space-8) 0;
+  margin: 0;
+}
+
+.matches-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-navy-900);
+  border: 1.5px solid #648BC3;
+  border-radius: var(--radius-key);
+  padding: var(--space-4) var(--space-5);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.matches-item__date {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-yellow);
+  flex-shrink: 0;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+}
+
+.matches-item__teams {
+  font-family: var(--font-body);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  flex: 1;
+}

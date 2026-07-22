@@ -1,0 +1,518 @@
+/* ── Over notification ────────────────────────────────────────── */
+.over-notification {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  background: var(--color-navy-900);
+  animation: over-fade 2s ease forwards;
+}
+
+.over-notification__text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 240px;
+  line-height: 1;
+  color: var(--color-mint);
+  text-align: center;
+}
+
+@keyframes over-fade {
+  0%   { opacity: 0; transform: scale(0.8); }
+  10%  { opacity: 1; transform: scale(1); }
+  85%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* ── Celebration overlay ──────────────────────────────────────── */
+.celebration-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  z-index: 100;
+  animation: celebration-fade 5s ease forwards;
+}
+
+.celebration-overlay--boundary { background: var(--color-navy-900); }
+.celebration-overlay--wicket   { background: var(--color-coral); }
+
+.celebration-score {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 420px;
+  line-height: 1;
+  text-align: center;
+}
+
+.celebration-overlay--boundary .celebration-score { color: var(--color-mint); }
+.celebration-overlay--wicket   .celebration-score { color: var(--color-navy-900); font-size: 240px; }
+
+.celebration-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 48px;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+.celebration-overlay--boundary .celebration-label { color: var(--color-text-secondary); }
+.celebration-overlay--wicket   .celebration-label { color: var(--color-navy-900); }
+
+.celebration-sponsor {
+  position: absolute;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.celebration-sponsor__logo {
+  width: 300px;
+  height: auto;
+}
+
+@keyframes celebration-fade {
+  0%   { opacity: 0; transform: scale(0.95); }
+  8%   { opacity: 1; transform: scale(1); }
+  80%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+
+/* ── Confetti ─────────────────────────────────────────────────── */
+.confetti-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -20px;
+  animation: confetti-fall linear forwards;
+  opacity: 0.9;
+}
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0.2; }
+}
+
+/* ── Main layout ──────────────────────────────────────────────── */
+.live-view-screen {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--color-navy-900);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-body);
+  overflow: hidden;
+  padding: 1vw 4vw 0;
+  box-sizing: border-box;
+}
+
+.live-view-offline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.live-view-status {
+  color: var(--color-text-secondary);
+  font-size: 40px;
+  text-align: center;
+  padding: 0 40px 40px;
+}
+
+.live-view-status--error { color: var(--color-coral); }
+
+/* ── Card — fills remaining space below the top padding ─────────── */
+.tv-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 1vw;
+  overflow: hidden;
+}
+
+/* Row 1: Innings */
+.tv-row-innings {
+  display: flex;
+  justify-content: center;
+}
+
+.tv-innings-label {
+  color: var(--color-yellow);
+  font-size: 4vw;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Row 2: Score/Target (left) | Over (right) */
+.tv-row-middle-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-shrink: 0;
+  overflow: visible;
+  width: 100%;
+}
+
+.tv-row-middle {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-shrink: 0;
+  transform-origin: top center;
+}
+
+.tv-cell-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.tv-score-combo {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5vw;
+}
+
+.tv-score-slash {
+  color: #648BC3;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 30vw;
+  line-height: 0.84;
+}
+
+.tv-score-target {
+  color: #648BC3;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 30vw;
+  line-height: 0.84;
+  white-space: nowrap;
+}
+
+/* Row 2: dots (full width) */
+.tv-row-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 1vw;
+}
+
+/* Row 3: Over (label + value, single line) */
+.tv-row-over {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-top: -0.5vw;
+}
+
+.tv-row-over__label {
+  color: var(--color-yellow);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 96px;
+  line-height: 1;
+}
+
+.tv-row-over__value {
+  color: var(--color-mint);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 96px;
+  line-height: 1;
+}
+
+.tv-score {
+  color: var(--color-yellow);
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 0.84;
+  font-size: 30vw;
+  white-space: nowrap;
+}
+
+/* Ball history — horizontal scroll, no wrap */
+.tv-ball-history {
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 1vw;
+}
+
+.tv-ball-history::-webkit-scrollbar { display: none; }
+
+/* Scale up dots for TV — override ScoringScreen defaults */
+.tv-ball-history .over-ball-history {
+  flex-wrap: nowrap;
+  gap: 1.2vw;
+  align-items: flex-end;
+  overflow: visible;
+}
+
+.tv-ball-history .ball-dot {
+  width: 6.5vw;
+  height: 6.5vw;
+}
+
+.tv-ball-history .ball-dot__value {
+  font-size: 2.2vw;
+}
+
+.tv-ball-history .ball-dot-tabbed__circle {
+  width: 6.5vw;
+  height: 6.5vw;
+  font-size: 2.2vw;
+}
+
+.tv-ball-history .ball-dot-tabbed__tab {
+  font-size: 1.4vw;
+  line-height: 1.3;
+  padding: 0.7vw 1.2vw;
+  min-width: 6.5vw;
+  margin-bottom: -0.6vw;
+}
+
+.tv-ball-history .ball-dot--placeholder {
+  width: 6.5vw;
+  height: 6.5vw;
+}
+
+/* ── Portrait layout ─────────────────────────────────────────── */
+/* ── Portrait-only / landscape-only visibility ───────────────── */
+.tv-landscape-only { display: flex; }
+.tv-portrait-only  { display: none; }
+
+@media (orientation: portrait) {
+  .tv-landscape-only { display: none !important; }
+  .tv-portrait-only  { display: flex; flex-direction: column; width: 100%; gap: 0; }
+
+  /* TV-sized fixed pixel values overflow a phone's narrow width —
+     scale down to fit, "OUT ☝️" in particular being much wider than
+     a single boundary digit. */
+  .celebration-score { font-size: 30vw; }
+  .celebration-overlay--wicket .celebration-score { font-size: 20vw; }
+  .over-notification__text { font-size: 18vw; }
+
+  .live-view-screen {
+    padding: 5vw 0 20px 0;
+  }
+
+  .tv-card {
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 12px 0;
+  }
+
+  /* Each row — centred, full width */
+  .tv-portrait-row {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex: 1;
+  }
+
+  .tv-portrait-label {
+    font-family: var(--font-body);
+    font-size: 3.5vw;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    margin-bottom: 1vw;
+  }
+
+  /* Row 1 — Innings */
+  .tv-portrait-row--innings {
+    margin-bottom: 2vh;
+    padding-bottom: 2vh;
+    border-bottom: 1px solid #648BC3;
+  }
+
+  .tv-portrait-row--innings .tv-portrait-label {
+    color: var(--color-yellow);
+    font-size: 7vw;
+    margin-bottom: 0;
+  }
+
+  .tv-portrait-innings-number {
+    color: var(--color-yellow);
+  }
+
+  .tv-portrait-team {
+    font-family: var(--font-display);
+    font-size: 7vw;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1;
+  }
+
+  /* Row 2 — Over + Run this over side by side */
+  .tv-portrait-row--over-run {
+    position: relative;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 2vh;
+    padding-bottom: 2vh;
+    border-bottom: 1px solid #648BC3;
+    width: 100%;
+  }
+
+  .tv-portrait-cell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tv-portrait-divider {
+    display: block;
+    position: absolute;
+    top: -2vh;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: #648BC3;
+    transform: translateX(-50%);
+  }
+
+  .tv-portrait-over {
+    font-family: var(--font-display);
+    font-size: 10vw;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1;
+  }
+
+  .tv-portrait-run-this-over {
+    font-family: var(--font-display);
+    font-size: 10vw;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1;
+  }
+
+  /* Row 3 — Runs (2× biggest) */
+  .tv-portrait-row--runs {
+    margin-bottom: 2vh;
+    padding-bottom: 2vh;
+    border-bottom: 1px solid #648BC3;
+  }
+
+  .tv-portrait-row--runs .tv-portrait-label {
+    font-size: 7vw;
+    color: var(--color-mint);
+  }
+
+  .tv-portrait-score {
+    font-family: var(--font-display);
+    font-size: min(50vw, 28vh);
+    font-weight: 800;
+    color: var(--color-yellow);
+    line-height: 0.9;
+  }
+
+  /* Row 4 — Pair total */
+  .tv-portrait-row--pair {
+    margin-bottom: 2vh;
+    padding-bottom: 2vh;
+    border-bottom: 1px solid #648BC3;
+  }
+
+  .tv-portrait-pair {
+    font-family: var(--font-display);
+    font-size: 12vw;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1;
+  }
+
+  /* Row 5 — Balls, 4 per row, wrap */
+  .tv-portrait-row--balls {
+    margin-bottom: 0;
+    width: calc(100% + 10vw);
+    margin-left: -5vw;
+    margin-right: -5vw;
+    padding: 0;
+  }
+
+  .tv-portrait-balls {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 0 5vw;
+  }
+
+  .tv-portrait-balls .over-ball-history {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1.5vw;
+    padding: 2vw 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    justify-content: center;
+  }
+
+  .tv-portrait-balls .over-ball-history::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tv-portrait-balls .ball-dot {
+    width: 12vw;
+    height: 12vw;
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .tv-portrait-balls .ball-dot__value {
+    font-size: 7vw;
+  }
+
+  .tv-portrait-balls .ball-dot-tabbed {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .tv-portrait-balls .ball-dot-tabbed__circle {
+    width: 12vw;
+    height: 12vw;
+  }
+
+  .tv-portrait-balls .ball-dot-tabbed__tab {
+    font-size: 3.6vw;
+    padding: 0.5vw 1.2vw;
+    min-width: 10vw;
+  }
+}

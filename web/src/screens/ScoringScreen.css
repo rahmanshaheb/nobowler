@@ -1,0 +1,1409 @@
+/* ScoringScreen.css */
+
+.scoring-screen {
+  background: var(--color-navy-900);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  padding: 12px var(--space-4) var(--space-3);
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ---------- Header: BALLS / RUNS + menu ---------- */
+
+.scoring-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.scoring-header__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scoring-header__stat + .scoring-header__stat {
+  margin-left: 16px;
+}
+
+.scoring-header__right {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.scoring-header__innings {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: var(--space-5);
+}
+
+.scoring-header__innings .scoring-header__label {
+  color: var(--color-text-secondary);
+}
+
+.scoring-header__innings-team {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 40px;
+  color: var(--color-yellow);
+}
+
+.scoring-header__label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.scoring-header__value {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 40px;
+  color: var(--color-yellow);
+}
+
+.scoring-header__value-target {
+  color: #648BC3;
+  font-weight: 400;
+}
+
+.scoring-header__row {
+  display: flex;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.menu-button {
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: 48px;
+  cursor: pointer;
+  padding: var(--space-2);
+  line-height: 1;
+  position: relative;
+}
+
+.co-scoring-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: var(--color-coral);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- 6-ball over dots ---------- */
+
+.over-ball-history {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  margin-top: -6px;
+}
+.over-ball-history::-webkit-scrollbar { display: none; }
+
+/* Plain circle — normal deliveries (no label) */
+.ball-dot {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.ball-dot__value { font-size: 16px; line-height: 1; }
+.ball-dot--normal     { background: var(--color-mint); color: var(--color-navy-900); }
+.ball-dot--placeholder { border: 2px solid #648BC3; }
+/* Wide / No-ball, no wicket — dotted border, dark navy fill */
+.ball-dot--extra {
+  border: 2px dotted var(--color-mint);
+  background: var(--color-navy-900);
+  color: var(--color-mint);
+}
+
+/* ── Connected tab + circle ──────────────────────────────────────
+   Tab sits directly above the circle with zero gap. Same background
+   colour on both so they read as one unified shape — like the
+   reference screenshot. Tab has rounded top corners only; the bottom
+   of the tab blends flush into the top of the circle.            */
+.ball-dot-tabbed {
+  flex: 0 0 auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.ball-dot-tabbed__tab {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  min-width: 38px;
+  text-align: center;
+  color: var(--color-navy-900);
+  white-space: nowrap;
+  margin-bottom: -4px;
+  position: relative;
+  z-index: 1;
+}
+
+.ball-dot-tabbed__circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-navy-900);
+}
+
+/* Extra (WD / NB), no wicket — mint tab, dotted mint border, navy fill */
+.ball-dot-tabbed--extra .ball-dot-tabbed__tab    { background: var(--color-mint); color: var(--color-navy-900); }
+.ball-dot-tabbed--extra .ball-dot-tabbed__circle {
+  border: 2px dotted var(--color-mint);
+  background: var(--color-navy-900);
+  color: var(--color-mint);
+}
+
+/* Wicket, normal delivery — coral */
+.ball-dot-tabbed--wicket .ball-dot-tabbed__tab    { background: var(--color-coral); }
+.ball-dot-tabbed--wicket .ball-dot-tabbed__circle { background: var(--color-coral); }
+
+/* Wicket on extra — coral tab, dashed coral circle */
+.ball-dot-tabbed--wicket-extra .ball-dot-tabbed__tab {
+  background: var(--color-coral);
+}
+.ball-dot-tabbed--wicket-extra .ball-dot-tabbed__circle {
+  border: 2px dashed var(--color-coral);
+  background: var(--color-coral-bg);
+  color: var(--color-coral);
+}
+
+/* ---------- Pair / Bowler row ---------- */
+
+.match-context-row {
+  display: flex;
+  border: 1.5px solid #648BC3;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.match-context-cell {
+  flex: 2;
+  min-width: 0;
+  padding: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.match-context-cell:first-child {
+  flex: 1;
+}
+
+.match-context-cell + .match-context-cell {
+  border-left: 1px solid #648BC3;
+}
+
+.match-context-cell--clickable {
+  cursor: pointer;
+}
+
+.match-context-cell--clickable:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.match-context-cell__label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.match-context-cell__value {
+  font-size: clamp(18px, 5vw, 28px);
+  font-weight: 400;
+  color: var(--color-text-primary);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* "Select Bowler" shown in red/coral when no bowler is chosen yet —
+   confirmed explicitly, matching the app's existing warning color
+   (also used for the wicket indicator) rather than a new one. */
+.match-context-cell__value--warning {
+  color: var(--color-coral);
+}
+
+/* Striker-change flash — confirmed explicitly: a scorer raised a real
+   concern about not noticing an unnoticed striker change before
+   several balls had already been scored against the wrong batter
+   (undo only reaches the single most recent ball). This briefly pulses
+   color + scale on ANY change to the striker name, automatic rotation
+   or manual swap alike, so a change catches the eye even in peripheral
+   vision rather than relying on the scorer actively reading a static
+   name every single ball. Duration matches the 900ms JS timeout that
+   removes this class afterward. */
+.match-context-cell__value--flash {
+  animation: striker-flash 900ms ease-out;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes striker-flash {
+  0% {
+    color: var(--color-yellow);
+    transform: scale(1.08);
+  }
+  60% {
+    color: var(--color-yellow);
+    transform: scale(1.08);
+  }
+  100% {
+    color: var(--color-text-primary);
+    transform: scale(1);
+  }
+}
+
+.icon-button-inline {
+  background: none;
+  border: none;
+  color: var(--color-yellow);
+  cursor: pointer;
+  font-size: 24px;
+  padding: 2px;
+  display: inline-flex;
+}
+
+.icon-button-inline--overridden {
+  color: var(--color-coral);
+}
+
+/* ---------- WIDE / NO / WKT pills ---------- */
+
+.delivery-type-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.pill-button {
+  flex: 1;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--color-key-bg);
+  background: transparent;
+  color: var(--color-key-bg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+  padding: 7.5px 0;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pill-button--active {
+  background: var(--color-yellow);
+  border: none;
+  color: var(--color-yellow-text);
+}
+
+.pill-button--wkt {
+  border-color: var(--color-coral);
+  color: var(--color-coral);
+}
+
+.pill-button--wkt-active {
+  background: var(--color-coral);
+  border: none;
+  color: var(--color-navy-900);
+}
+
+.pill-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ---------- Number pad ---------- */
+
+.numpad-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+
+.numpad-key {
+  aspect-ratio: 1;
+  border-radius: var(--radius-key);
+  border: none;
+  background: var(--color-key-bg);
+  color: var(--color-navy-900);
+  font-size: 48px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 5px 5px 0 0 #0d112d;
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.numpad-key:active {
+  transform: translate(5px, 5px);
+  box-shadow: 0 0 0 0 #0d112d;
+}
+
+.numpad-key:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.numpad-key--selected {
+  background: var(--color-yellow);
+}
+
+/* ---------- Zone selector ---------- */
+
+.zone-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.zone-button {
+  flex: 1;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--color-key-bg);
+  background: transparent;
+  color: var(--color-key-bg);
+  font-size: 14px;
+  font-weight: 700;
+  padding: var(--space-2) 0;
+  cursor: pointer;
+}
+
+.zone-button--selected {
+  background: var(--color-yellow);
+  border: none;
+  color: var(--color-yellow-text);
+}
+
+.zone-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ---------- Undo + stepper row ---------- */
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.undo-button {
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--color-key-bg);
+  color: var(--color-navy-900);
+  font-weight: 700;
+  font-size: 14px;
+  padding: var(--space-3) var(--space-5);
+  cursor: pointer;
+}
+
+.undo-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.stepper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--color-key-bg);
+  padding: var(--space-2) var(--space-4);
+}
+
+.stepper--active {
+  background: var(--color-yellow);
+  border-color: transparent;
+}
+
+.stepper--active .stepper__value,
+.stepper--active .stepper__btn {
+  color: var(--color-yellow-text);
+}
+
+/* Matches .zone-button:disabled's 0.35 opacity treatment — the
+   individual +/- buttons already dimmed via :disabled, but the
+   container's border and the value text didn't, so the stepper as a
+   whole looked active/bright even while genuinely unusable. */
+.stepper--disabled {
+  opacity: 0.35;
+}
+
+.stepper__btn {
+  background: none;
+  border: none;
+  color: var(--color-key-bg);
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 28px;
+}
+
+.stepper__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stepper__value {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-key-bg);
+}
+
+/* ---------- On strike indicator ---------- */
+
+.on-strike-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 0 var(--space-4);
+  text-align: center;
+}
+
+.on-strike-indicator__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.on-strike-indicator__name {
+  font-size: clamp(16px, 5vw, 18px);
+  font-weight: 400;
+  color: var(--color-mint);
+}
+
+/* ---------- Submit button ---------- */
+
+.submit-button {
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--color-yellow);
+  color: var(--color-yellow-text);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 16px;
+  padding: var(--space-4) 0;
+  cursor: pointer;
+  box-shadow: 5px 5px 0 0 #0d112d;
+  transition: opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.submit-button:active {
+  transform: translate(5px, 5px);
+  box-shadow: 0 0 0 0 #0d112d;
+}
+
+.submit-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.submit-button--wicket-pending {
+  background: var(--color-coral);
+  color: var(--color-navy-900);
+}
+
+.submit-button--three-dots {
+  background: var(--color-coral);
+  color: var(--color-navy-900);
+}
+
+/* ---------- Modal overlay (wicket type, run-out fielder, confirmations) ---------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+  padding: 0;
+}
+
+.modal-card {
+  background: var(--color-navy-800);
+  border-radius: 0;
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  width: 100%;
+  max-width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-card);
+  position: relative;
+}
+
+/* Small centred confirmation dialogs — undo, end innings etc. Keep original compact style. */
+.modal-card--compact {
+  height: auto;
+  max-height: 80vh;
+  width: 90%;
+  max-width: 400px;
+  border-radius: var(--radius-card);
+  margin: auto;
+}
+
+/* Rulebook */
+.modal-card--menu {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: var(--space-6);
+}
+
+.modal-card--rulebook {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  padding-bottom: var(--space-7);
+}
+
+.rulebook-content,
+.rulebook-list {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: var(--space-2);
+  padding-bottom: var(--space-6);
+}
+
+.rulebook-section {
+  margin-bottom: var(--space-5);
+}
+
+.rulebook-section:last-child {
+  margin-bottom: 0;
+}
+
+.rulebook-section__title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-yellow);
+  margin-bottom: var(--space-2);
+}
+
+.rulebook-section p {
+  font-family: var(--font-body);
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.rulebook-section ul {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-4);
+}
+
+.rulebook-section li {
+  font-family: var(--font-body);
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+/* Scorecard */
+.modal-card--scorecard {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-navy-900);
+  padding-bottom: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.scorecard-content {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: var(--space-2);
+  padding-bottom: var(--space-6);
+}
+
+.scorecard-summary-box {
+  border: 1.5px solid #648BC3;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.scorecard-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  text-align: center;
+  padding: 8px var(--space-4);
+}
+
+.scorecard-summary-row--result {
+  color: var(--color-mint);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.scorecard-summary-row--motm {
+  color: var(--color-yellow);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.scorecard-summary-row--no-wide {
+  color: var(--color-coral);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.scorecard-status {
+  font-family: var(--font-body);
+  font-size: 20px;
+  color: var(--color-text-primary);
+}
+
+.scorecard-status--error {
+  color: var(--color-coral);
+}
+
+.scorecard-team {
+  margin-bottom: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.man-of-match + .scorecard-team {
+  border-top: none;
+  padding-top: 0;
+}
+
+.scorecard-team:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.scorecard-team:last-child {
+  margin-bottom: 0;
+}
+
+.scorecard-team__title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+  border-left: 3px solid var(--color-yellow);
+  padding-left: var(--space-3);
+}
+
+.scorecard-section-label {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin: var(--space-3) 0 var(--space-2);
+}
+
+.scorecard-section-label--batting { color: var(--color-mint); }
+.scorecard-section-label--pairs   { color: var(--color-mint); }
+.scorecard-section-label--zones   { color: var(--color-mint); }
+.scorecard-section-label--bowling { color: var(--color-coral); }
+
+
+.scorecard-empty {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.scorecard-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.scorecard-player-card {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.scorecard-player-card:last-child {
+  border-bottom: none;
+}
+
+.scorecard-player-card__name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.scorecard-player-card__stats {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+}
+
+.scorecard-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 36px;
+}
+
+.scorecard-stat__value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.1;
+}
+
+.scorecard-stat__label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.scorecard-not-out {
+  color: var(--color-yellow);
+  font-weight: 700;
+}
+
+.modal-close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: none;
+  border: none;
+  color: var(--color-yellow);
+  font-size: 40px;
+  cursor: pointer;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 38.4px;
+  margin-bottom: var(--space-6);
+  color: var(--color-coral);
+}
+
+/* Full-height modals (top-left title, top-right close icon) — nudge the
+   title up so its cap-height lines up with the × icon instead of sitting
+   lower due to the card's top padding. Excludes the small centered
+   confirm dialogs (.modal-card--compact), which use a different layout. */
+.modal-card:not(.modal-card--compact) .modal-title {
+  margin-top: -8px;
+}
+
+.modal-title--accent {
+  color: var(--color-yellow);
+}
+
+.wicket-type-grid,
+.fielder-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.modal-option-button {
+  border-radius: var(--radius-key);
+  border: 2px solid #648BC3;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 24px;
+  padding: var(--space-5) var(--space-3);
+  cursor: pointer;
+  text-align: center;
+  position: relative;
+}
+
+.modal-option-button__current-tick {
+  display: inline-block;
+  margin-left: 4px;
+  color: var(--color-mint);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.modal-option-button--selected {
+  border-color: #648BC3;
+  color: var(--color-yellow);
+}
+
+.modal-option-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.modal-confirm-button {
+  width: 100%;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--color-yellow);
+  color: var(--color-yellow-text);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 16px;
+  padding: var(--space-4) 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.modal-confirm-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.modal-confirm-button--secondary {
+  background: transparent;
+  border: 1.5px solid var(--color-yellow);
+  color: var(--color-yellow);
+}
+
+.modal-link {
+  display: block;
+  text-align: center;
+  color: var(--color-yellow);
+  text-decoration: underline;
+  font-size: 16px;
+  margin-top: var(--space-4);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+/* ---------- Toast / inline banners ---------- */
+
+.banner {
+  border-radius: var(--radius-key);
+  padding: var(--space-3) var(--space-4);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.banner--alert {
+  background: var(--color-coral-bg);
+  color: var(--color-coral);
+}
+
+/* ---------- Match menu (hamburger icon) ---------- */
+
+.match-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.match-menu-item {
+  background: var(--color-navy-900);
+  border: 1.5px solid #648BC3;
+  color: var(--color-text-primary);
+  border-radius: var(--radius-key);
+  padding: var(--space-3) var(--space-4);
+  font-size: 16px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.match-menu-item svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.match-menu-item:hover {
+  background: var(--color-navy-900);
+}
+
+.match-menu-item--toggle {
+  cursor: default;
+}
+
+.match-menu-item--locked {
+  opacity: 0.6;
+}
+
+.match-menu-item--wide-locked {
+  color: var(--color-text-secondary);
+  opacity: 1;
+  cursor: default;
+  pointer-events: none;
+}
+
+.match-menu-item--wide-locked svg {
+  color: var(--color-text-secondary);
+}
+
+.match-menu-item--wide-locked .match-menu-item__toggle-text span {
+  color: var(--color-text-secondary);
+}
+
+.match-menu-item--wide-locked .menu-wide-btn--yes,
+.match-menu-item--wide-locked .menu-wide-btn--no {
+  color: var(--color-text-secondary);
+  border-color: #648BC3;
+  background: var(--color-navy-900);
+  cursor: default;
+}
+
+.match-menu-item__toggle-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-body);
+}
+
+.match-menu-item__toggle-sub {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+/* Wide count YES/NO button */
+.menu-wide-btn {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-key);
+  border: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.menu-wide-btn--yes {
+  background: var(--color-navy-900);
+  color: var(--color-text-secondary);
+  border: 1.5px solid #648BC3;
+}
+
+.menu-wide-btn--no {
+  background: var(--color-navy-900);
+  color: var(--color-coral);
+  border: 1.5px solid var(--color-coral);
+}
+
+.match-menu-item--danger,
+.match-menu-item--danger svg {
+  color: var(--color-coral);
+}
+
+.menu-wide-btn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.menu-toggle {
+  flex-shrink: 0;
+  width: 46px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  padding: 3px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.menu-toggle:disabled {
+  cursor: default;
+}
+
+.menu-toggle--on  { background: var(--color-mint); }
+.menu-toggle--off { background: var(--color-yellow); }
+
+.menu-toggle__knob {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+  display: block;
+}
+
+.menu-toggle--on  .menu-toggle__knob { transform: translateX(20px); background: white; }
+.menu-toggle--off .menu-toggle__knob { transform: translateX(0); background: var(--color-text-secondary); }
+
+/* Match ID display at the bottom of the menu — quiet info row,
+   not a primary action, but tappable to copy the full UUID for
+   later reference (e.g. generating a scorecard PDF the next day). */
+.match-id-display {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: 0;
+  padding: var(--space-4) var(--space-4);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-key);
+  cursor: pointer;
+  text-align: left;
+}
+
+.match-id-display__label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.match-id-display__value {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-yellow);
+  letter-spacing: 0.05em;
+  flex: 1;
+}
+
+.match-id-display__action {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-mint);
+  flex-shrink: 0;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ── Innings Summary Modal ─────────────────────────────────────── */
+.modal-card--innings-summary {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0;
+  font-family: var(--font-body);
+}
+
+.innings-summary__heading {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-mint);
+  margin: 0 0 var(--space-2);
+}
+
+.innings-summary__team {
+  font-family: var(--font-body);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-yellow);
+  margin: 0 0 var(--space-5);
+}
+
+.innings-summary__total-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-5);
+  align-items: flex-start;
+}
+
+.innings-summary__total-label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.innings-summary__total-value {
+  font-family: var(--font-display);
+  font-size: 72px;
+  font-weight: 800;
+  color: var(--color-mint);
+  line-height: 1;
+}
+
+.innings-summary__pairs {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.innings-summary__pairs-heading {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 var(--space-2);
+}
+
+.innings-summary__content {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: var(--space-2);
+}
+
+.innings-summary__pair-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid #648BC3;
+}
+
+.innings-summary__pair-name {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-text-primary);
+}
+
+.innings-summary__pair-runs {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.innings-summary__continue {
+  margin-top: var(--space-5);
+  flex-shrink: 0;
+  margin-bottom: var(--space-5);
+}
+
+/* ── Scorecard no-wide banner ──────────────────────────────────── */
+.scorecard-no-wide-banner {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-navy-900);
+  background: var(--color-coral);
+  border-radius: 12px;
+  padding: var(--space-3) var(--space-4);
+  text-align: center;
+  margin-bottom: var(--space-4);
+}
+
+/* ── Roster Picker (bowler, pair, fielder, run-out striker) ─────── */
+.roster-picker-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.roster-picker-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--color-navy-900);
+  border: 2px solid #648BC3;
+  border-radius: var(--radius-key);
+  padding: var(--space-5) var(--space-3);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--color-text-primary);
+}
+
+.roster-picker-item--selected {
+  border-color: var(--color-yellow);
+  background: transparent;
+}
+
+.roster-picker-item--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.roster-picker-item__name {
+  flex: 0 1 auto;
+}
+
+.roster-picker-item--selected .roster-picker-item__name {
+  color: var(--color-yellow);
+}
+
+.roster-picker-item__count {
+  font-size: 24px;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.roster-picker-item__tick {
+  color: var(--color-yellow);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Rulebook card styles (mirrors WhatsNew) ─────────────────── */
+.rulebook-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-bottom: var(--space-5);
+}
+
+.rulebook-card {
+  background: var(--color-navy-900);
+  border: 1.5px solid #648BC3;
+  border-radius: var(--radius-key);
+  padding: var(--space-4);
+}
+
+.rulebook-card__body {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.rulebook-card__icon {
+  flex-shrink: 0;
+  color: var(--color-yellow);
+  margin-top: 2px;
+}
+
+.rulebook-card__title {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-2);
+}
+
+.rulebook-card__items {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rulebook-card__item {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.rulebook-card__item::before {
+  content: "•";
+  flex-shrink: 0;
+  color: var(--color-yellow);
+}

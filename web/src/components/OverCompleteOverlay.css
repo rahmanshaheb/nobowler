@@ -1,0 +1,63 @@
+/* OverCompleteOverlay.css */
+
+.over-complete-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-navy-900);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  z-index: 1000;
+  animation: over-complete-pop-in 400ms ease forwards;
+}
+
+.over-complete-message {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--color-yellow);
+}
+
+.over-complete-button {
+  background: var(--color-yellow);
+  color: var(--color-yellow-text);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 16px;
+  padding: var(--space-4) var(--space-6);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.over-complete-button__icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.over-complete-skip {
+  background: transparent;
+  border: 1.5px solid var(--color-yellow);
+  border-radius: var(--radius-pill);
+  color: var(--color-yellow);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  padding: var(--space-4) var(--space-6);
+  cursor: pointer;
+}
+
+@keyframes over-complete-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

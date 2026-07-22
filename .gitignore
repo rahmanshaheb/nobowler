@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Environment files — never commit real secrets
+.env
+.env.local
+
+# Build output
+dist/
+build/
+
+# OS/editor noise
+.DS_Store
+*.log
+
+# Handover data exports — real match/player data, share directly, don't commit
+handover/

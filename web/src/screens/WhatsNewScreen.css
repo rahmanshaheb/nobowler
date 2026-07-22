@@ -1,0 +1,110 @@
+/* WhatsNewScreen.css */
+
+.whats-new-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-navy-900);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) 16px;
+  box-sizing: border-box;
+}
+
+.whats-new-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-6);
+  position: relative;
+}
+
+.whats-new-back {
+  background: none;
+  border: none;
+  color: var(--color-yellow);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  text-align: left;
+}
+
+.whats-new-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.whats-new-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.whats-new-card {
+  background: var(--color-navy-900);
+  border: 1.5px solid #648BC3;
+  border-radius: var(--radius-key);
+  padding: var(--space-5);
+}
+
+.whats-new-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.whats-new-card__version {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-navy-900);
+  background: var(--color-mint);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+}
+
+.whats-new-card__date {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.whats-new-card__body {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.whats-new-card__icon {
+  flex-shrink: 0;
+  color: var(--color-yellow);
+  margin-top: 2px;
+}
+
+.whats-new-card__title {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-2);
+}
+
+.whats-new-card__desc {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+  margin: 0;
+}

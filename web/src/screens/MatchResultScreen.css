@@ -1,0 +1,102 @@
+/* MatchResultScreen.css */
+
+.result-screen {
+  min-height: 100vh;
+  background: var(--color-navy-900);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  text-align: center;
+  gap: var(--space-5);
+}
+
+.result-status {
+  font-size: 20px;
+  color: var(--color-text-secondary);
+}
+
+.result-status--error {
+  color: var(--color-coral);
+}
+
+.result-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-yellow);
+  margin-bottom: var(--space-4);
+}
+
+.result-innings-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 360px;
+  border-bottom: 1px solid #648BC3;
+  padding-bottom: var(--space-3);
+  font-size: 20px;
+}
+
+.result-team-score {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.result-home-button {
+  width: 100%;
+  max-width: 320px;
+  background: var(--color-yellow);
+  color: var(--color-yellow-text);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 16px;
+  padding: var(--space-4) 0;
+  cursor: pointer;
+  margin-top: var(--space-5);
+}
+
+/* Match ID display on result screen — same pattern as the menu version
+   but styled to sit within the result screen's centered layout */
+.result-match-id {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.result-match-id__label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.result-match-id__value {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: 0.1em;
+  flex: 1;
+  text-align: center;
+}
+
+.result-match-id__action {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-yellow);
+}

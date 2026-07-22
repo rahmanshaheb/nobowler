@@ -1,0 +1,188 @@
+/* MatchSetupScreen.css */
+
+.setup-screen {
+  min-height: 100vh;
+  background: var(--color-navy-900);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  padding: var(--space-6) var(--space-4);
+  max-width: 480px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.setup-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.setup-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.setup-header {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin-bottom: var(--space-4);
+}
+
+.setup-back {
+  background: none;
+  border: none;
+  color: var(--color-yellow);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  position: relative;
+  z-index: 1;
+}
+
+.setup-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-top: var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.setup-input {
+  background: transparent;
+  border: 1.5px solid #648BC3;
+  border-radius: var(--radius-key);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  padding: var(--space-4);
+  width: 100%;
+}
+
+.setup-input:focus {
+  outline: none;
+  border-color: var(--color-yellow);
+  box-shadow: 0 0 0 3px rgba(245, 200, 66, 0.2);
+}
+
+.setup-input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.setup-input--passcode {
+  letter-spacing: 0.3em;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.setup-button {
+  width: 100%;
+  background: var(--color-yellow);
+  color: var(--color-yellow-text);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  padding: var(--space-4) 0;
+  cursor: pointer;
+  margin-top: var(--space-3);
+}
+
+.setup-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.setup-team-choice-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.setup-team-choice {
+  flex: 1;
+  background: var(--color-navy-900);
+  border: 1.5px solid #648BC3;
+  border-radius: var(--radius-key);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  padding: var(--space-4);
+  cursor: pointer;
+}
+
+.setup-section-heading {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.setup-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.setup-add-row {
+  background: none;
+  border: 1.5px dashed #648BC3;
+  border-radius: var(--radius-key);
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  padding: var(--space-3);
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+
+.setup-error {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-coral);
+  margin: 0;
+}
+
+/* Player row with delete */
+.setup-player-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.setup-player-row .setup-input--player {
+  flex: 1;
+}
+
+.setup-delete-player {
+  background: none;
+  border: none;
+  color: var(--color-coral);
+  cursor: pointer;
+  padding: var(--space-2);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.setup-delete-player:hover {
+  opacity: 0.7;
+}
