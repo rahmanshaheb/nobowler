@@ -1,15 +1,12 @@
 // MatchesScreen.jsx
 import { useState, useEffect } from 'react';
 import './MatchesScreen.css';
+import '../screens/ScoringScreen.css';
 import { api } from '../api/client';
-import ScorecardModal from '../components/ScorecardModal';
 
-const IconArrowRight = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-yellow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M5 12h14"/>
-    <path d="m12 5 7 7-7 7"/>
-  </svg>
-);
+function openScoreSummary(matchId) {
+  window.location.href = `/summary/${matchId}`;
+}
 
 const IconVerified = ({ size = 16 }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--color-mint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
@@ -26,13 +23,84 @@ function formatMatchDate(dateStr, index, sameDay) {
   return sameDay ? `${base} ${index + 1}` : base;
 }
 
-export default function MatchesScreen({
-onBack }) {
+function DeleteMatchModal({ match, onCancel, onDeleted }) {
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!/^\d{4}$/.test(code)) {
+      setError('Enter the 4-digit match code.');
+      return;
+    }
+
+    setDeleting(true);
+    setError('');
+
+    try {
+      await api.delete(`/public/matches/${match.id}`, { joinCode: code });
+      onDeleted(match.id);
+    } catch (err) {
+      setError(err.message || 'Could not delete match.');
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div className="modal-overlay matches-delete-overlay" onClick={onCancel}>
+      <div className="modal-card modal-card--compact matches-delete-modal" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="modal-close" onClick={onCancel} aria-label="Close">×</button>
+        <h2 className="modal-title matches-delete-modal__title">Delete match?</h2>
+        <p className="matches-delete-modal__teams">{match.team_a_name} vs {match.team_b_name}</p>
+        <p className="matches-delete-modal__hint">
+          Enter the match code to confirm. You can find it in the scoring menu.
+        </p>
+        <label className="matches-delete-modal__label" htmlFor="match-delete-code">
+          Match code
+        </label>
+        <input
+          id="match-delete-code"
+          className="matches-delete-modal__input"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={4}
+          placeholder="0000"
+          value={code}
+          autoComplete="off"
+          onChange={(e) => {
+            setCode(e.target.value.replace(/\D/g, '').slice(0, 4));
+            setError('');
+          }}
+        />
+        {error && <p className="matches-delete-modal__error">{error}</p>}
+        <button
+          type="button"
+          className="modal-confirm-button matches-delete-modal__confirm"
+          disabled={deleting || code.length !== 4}
+          onClick={handleDelete}
+        >
+          {deleting ? 'Deleting…' : 'Delete match'}
+        </button>
+        <button
+          type="button"
+          className="modal-confirm-button modal-confirm-button--secondary"
+          disabled={deleting}
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function MatchesScreen({ onBack }) {
   useEffect(() => { window.scrollTo(0, 0); }, []);
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedMatchId, setSelectedMatchId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
     api.get('/public/matches')
@@ -60,10 +128,17 @@ onBack }) {
     return { ...m, label };
   });
 
+  function handleDeleted(matchId) {
+    setMatches((prev) => prev.filter((m) => m.id !== matchId));
+    setDeleteTarget(null);
+  }
+
   return (
     <div className="matches-screen">
       <div className="matches-header">
-        <button className="matches-back" onClick={onBack}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button type="button" className="matches-back" onClick={onBack}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
         <h1 className="matches-title">Matches</h1>
       </div>
 
@@ -74,22 +149,34 @@ onBack }) {
           <p className="matches-empty">No matches found.</p>
         )}
         {matchesWithLabels.map((m) => (
-          <button
-            key={m.id}
-            className="matches-item"
-            onClick={() => setSelectedMatchId(m.id)}
-          >
-            <div className="matches-item__date">
-              {m.label}
-              {[2423, 7091, 7585, 8081, 9567].includes(m.join_code) && (
-                <span style={{ marginLeft: 6, display: 'inline-flex', verticalAlign: 'middle' }}>
-                  <IconVerified />
-                </span>
-              )}
-            </div>
-            <div className="matches-item__teams">{m.team_a_name} vs {m.team_b_name}</div>
-            <IconArrowRight />
-          </button>
+          <div key={m.id} className="matches-item">
+            <button
+              type="button"
+              className="matches-item__main"
+              onClick={() => openScoreSummary(m.id)}
+            >
+              <div className="matches-item__date">
+                {m.label}
+                {[2423, 7091, 7585, 8081, 9567].includes(m.join_code) && (
+                  <span style={{ marginLeft: 6, display: 'inline-flex', verticalAlign: 'middle' }}>
+                    <IconVerified />
+                  </span>
+                )}
+              </div>
+              <div className="matches-item__teams">{m.team_a_name} vs {m.team_b_name}</div>
+            </button>
+            <button
+              type="button"
+              className="matches-item__delete"
+              aria-label={`Delete ${m.team_a_name} vs ${m.team_b_name}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeleteTarget(m);
+              }}
+            >
+              Delete
+            </button>
+          </div>
         ))}
       </div>
 
@@ -98,8 +185,12 @@ onBack }) {
         <span>Matches with verified icons are official. All others are test matches and are periodically deleted.</span>
       </div>
 
-      {selectedMatchId && (
-        <ScorecardModal matchId={selectedMatchId} onClose={() => setSelectedMatchId(null)} />
+      {deleteTarget && (
+        <DeleteMatchModal
+          match={deleteTarget}
+          onCancel={() => setDeleteTarget(null)}
+          onDeleted={handleDeleted}
+        />
       )}
     </div>
   );

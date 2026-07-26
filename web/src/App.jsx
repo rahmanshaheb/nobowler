@@ -9,6 +9,8 @@ import RulebookModal from './components/RulebookModal';
 import MatchesScreen from './screens/MatchesScreen';
 import WhatsNewScreen from './screens/WhatsNewScreen';
 import JoinMatchScreen from './screens/JoinMatchScreen';
+import ScoreSummaryScreen from './screens/ScoreSummaryScreen';
+import PlayerStatsScreen from './screens/PlayerStatsScreen';
 import { saveActiveMatchId } from './utils/matchStorage';
 import { api } from './api/client';
 
@@ -17,6 +19,13 @@ const DISABLE_NEW_MATCH = false;
 const livePathMatch = window.location.pathname.replace(/\/$/, '').match(/^\/live(?:\/([^/]+))?$/);
 const isLiveViewPath = !!livePathMatch;
 const liveMatchIdFromUrl = livePathMatch?.[1] ?? null;
+
+const summaryPathMatch = window.location.pathname.replace(/\/$/, '').match(/^\/summary(?:\/([^/]+))?$/);
+const isSummaryPath = !!summaryPathMatch;
+const summaryMatchIdFromUrl = summaryPathMatch?.[1] ?? null;
+
+const statsPathMatch = window.location.pathname.replace(/\/$/, '').match(/^\/stats(?:\/([^/]+))?$/);
+const isStatsPath = !!statsPathMatch;
 
 const IconNewMatch = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -78,6 +87,10 @@ export default function App() {
   }
 
   if (mode === 'live') return <LiveViewScreen matchId={liveMatchIdFromUrl} />;
+
+  if (isSummaryPath) return <ScoreSummaryScreen matchId={summaryMatchIdFromUrl} />;
+
+  if (isStatsPath) return <PlayerStatsScreen />;
 
   if (!rehydrationChecked) {
     return (
@@ -152,6 +165,13 @@ export default function App() {
           >
             <IconScorecard />
             Scorecard
+          </button>
+          <button
+            className="landing-button landing-button--secondary"
+            onClick={() => { window.location.href = '/stats'; }}
+          >
+            <IconScorecard />
+            Player stats
           </button>
         </div>
 

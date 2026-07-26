@@ -13,7 +13,6 @@ import OverCompleteOverlay from '../components/OverCompleteOverlay';
 import InningsSummaryModal from '../components/InningsSummaryModal';
 import RulebookModal from '../components/RulebookModal';
 import UndoConfirmModal from '../components/UndoConfirmModal';
-import ScorecardModal from '../components/ScorecardModal';
 
 /**
  * Wraps ScoringScreen with real API calls. Owns the match-state values
@@ -86,7 +85,6 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
   const [bowlerOverlayIsPostPairRotation, setBowlerOverlayIsPostPairRotation] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [rulebookOpen, setRulebookOpen] = useState(false);
-  const [scorecardOpen, setScorecardOpen] = useState(false);
   const [editTeamsOpen, setEditTeamsOpen] = useState(false);
   const [endInningsConfirmOpen, setEndInningsConfirmOpen] = useState(false);
   const [endInningsAnimating, setEndInningsAnimating] = useState(false);
@@ -851,7 +849,8 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
           onEditTeams={() => setEditTeamsOpen(true)}
           onEndInnings={handleEndInnings}
           onOpenRulebook={() => setRulebookOpen(true)}
-          onOpenScorecard={() => setScorecardOpen(true)}
+          onOpenScorecard={() => { window.location.href = `/summary/${matchContext.matchId}`; }}
+          onOpenPlayerStats={() => { window.location.href = '/stats'; }}
           matchId={matchContext.matchId}
           joinCode={matchContext.joinCode}
           wideCountEnabled={wideCountEnabled}
@@ -879,10 +878,6 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
       )}
 
       {rulebookOpen && <RulebookModal onClose={() => setRulebookOpen(false)} />}
-
-      {scorecardOpen && (
-        <ScorecardModal matchId={matchContext.matchId} strikerId={strikerId} nonStrikerId={nonStrikerId} onClose={() => setScorecardOpen(false)} />
-      )}
 
       {editTeamsOpen && (
         <EditTeamsScreen

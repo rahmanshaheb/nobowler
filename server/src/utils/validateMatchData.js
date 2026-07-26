@@ -8,9 +8,13 @@
 async function validateMatchData(matchId, pool) {
   const issues = [];
 
-  // Get innings
+  // Innings totals come from v_innings_totals — the raw innings table has no total_wickets column.
   const { rows: innings } = await pool.query(
-    `SELECT id, innings_number, batting_team, total_wickets FROM innings WHERE match_id = $1 ORDER BY innings_number`,
+    `SELECT i.id, i.innings_number, i.batting_team, vit.total_wickets
+     FROM innings i
+     LEFT JOIN v_innings_totals vit ON vit.innings_id = i.id
+     WHERE i.match_id = $1
+     ORDER BY i.innings_number`,
     [matchId]
   );
 
@@ -29,9 +33,11 @@ async function validateMatchData(matchId, pool) {
     );
     const linkedCount = Number(linkedDismissals[0].count);
 
-    // Sum of bowler credited wickets
+    // Sum of bowler-credited wickets from the aggregated view (not bowling_spell table).
     const { rows: bowlerWickets } = await pool.query(
-      `SELECT COALESCE(SUM(total_wickets_in_spell), 0) as total FROM bowling_spell WHERE innings_id = $1`,
+      `SELECT COALESCE(SUM(bowler_credited_wickets), 0) AS total
+       FROM v_bowling_stats
+       WHERE innings_id = $1`,
       [inning.id]
     );
     const bowlerTotal = Number(bowlerWickets[0].total);

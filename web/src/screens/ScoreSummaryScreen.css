@@ -1,0 +1,393 @@
+/* ScoreSummaryScreen.css — matches No Bowlers app theme */
+
+.summary-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-navy-900);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header (matches MatchesScreen) ─────────────────────────── */
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-6) 16px var(--space-3);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-navy-900);
+  border-bottom: 1px solid rgba(100, 139, 195, 0.25);
+}
+
+.summary-back {
+  background: none;
+  border: none;
+  color: var(--color-yellow);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.summary-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  padding-right: 24px;
+}
+
+.summary-back-link {
+  display: block;
+  margin: var(--space-4) auto;
+  background: none;
+  border: none;
+  color: var(--color-yellow);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── Body ───────────────────────────────────────────────────── */
+
+.summary-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4) 16px var(--space-8);
+}
+
+.summary-match-meta {
+  text-align: center;
+  margin-bottom: var(--space-5);
+}
+
+.summary-match-meta__teams {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-primary);
+}
+
+.summary-match-meta__date {
+  margin: 0 0 var(--space-3);
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+
+.summary-match-meta__tags {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.summary-match-meta__code {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.summary-stats-link {
+  display: inline-block;
+  margin-top: var(--space-3);
+  background: none;
+  border: none;
+  color: var(--color-yellow);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+}
+
+.summary-badge {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+}
+
+.summary-badge--live {
+  color: var(--color-coral);
+  border-color: var(--color-coral);
+  background: var(--color-coral-bg);
+}
+
+.summary-badge--completed {
+  color: var(--color-mint);
+  border-color: var(--color-mint);
+  background: var(--color-mint-bg);
+}
+
+.summary-badge--setup {
+  color: var(--color-yellow);
+  border-color: var(--color-yellow);
+}
+
+/* ── Live panel ─────────────────────────────────────────────── */
+
+.summary-live {
+  border: 1.5px solid var(--color-coral);
+  border-radius: var(--radius-key);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+  background: var(--color-coral-bg);
+  position: relative;
+}
+
+.summary-live__badge {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--color-coral);
+}
+
+.summary-live__score {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.summary-live__team {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.summary-live__runs {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.summary-live__target {
+  font-size: 22px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.summary-live__meta {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.summary-live__detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 15px;
+  color: var(--color-text-primary);
+}
+
+.summary-live__required {
+  margin: var(--space-3) 0 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-mint);
+}
+
+/* ── Innings card ───────────────────────────────────────────── */
+
+.summary-innings-card {
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-key);
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+  background: var(--color-navy-900);
+}
+
+.summary-innings-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid rgba(100, 139, 195, 0.35);
+  border-left: 4px solid var(--color-yellow);
+}
+
+.summary-innings-card__head-left {
+  min-width: 0;
+}
+
+.summary-innings-card__inn {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin-bottom: 2px;
+}
+
+.summary-innings-card__team {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summary-innings-card__head-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.summary-innings-card__total {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-mint);
+  line-height: 1.1;
+}
+
+.summary-innings-card__overs {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.summary-innings-card__cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.summary-col {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+.summary-col + .summary-col {
+  border-left: 1px solid rgba(100, 139, 195, 0.25);
+}
+
+.summary-col .scorecard-section-label {
+  margin-top: 0;
+}
+
+/* ── Player rows ────────────────────────────────────────────── */
+
+.summary-player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.summary-player-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 15px;
+}
+
+.summary-player-row:last-child {
+  border-bottom: none;
+}
+
+.summary-player-row--idle {
+  color: var(--color-text-secondary);
+}
+
+.summary-player-row__name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summary-player-row__live {
+  color: var(--color-mint);
+  margin-right: 4px;
+  font-size: 11px;
+}
+
+.summary-player-row__value {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.summary-player-row--idle .summary-player-row__value {
+  font-weight: 500;
+}
+
+/* ── Sponsor footer ─────────────────────────────────────────── */
+
+.summary-sponsor {
+  text-align: center;
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid rgba(100, 139, 195, 0.25);
+}
+
+.summary-sponsor__label {
+  margin: 0 0 var(--space-2);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.summary-sponsor__logo {
+  height: 36px;
+  width: auto;
+  opacity: 0.9;
+}
+
+/* ── Mobile ─────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .summary-innings-card__cols {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-col + .summary-col {
+    border-left: none;
+    border-top: 1px solid rgba(100, 139, 195, 0.25);
+  }
+
+  .summary-innings-card__total {
+    font-size: 22px;
+  }
+
+  .summary-title {
+    font-size: 24px;
+  }
+}

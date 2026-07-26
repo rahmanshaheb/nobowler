@@ -143,88 +143,271 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 1vw;
   overflow: hidden;
+  min-height: 0;
 }
 
-/* Row 1: Innings */
-.tv-row-innings {
-  display: flex;
-  justify-content: center;
-}
-
-.tv-innings-label {
-  color: var(--color-yellow);
-  font-size: 4vw;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-/* Row 2: Score/Target (left) | Over (right) */
-.tv-row-middle-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  flex-shrink: 0;
-  overflow: visible;
+/* ── Two-column layout (landscape) ─────────────────────────────── */
+.tv-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) min(32vw, 400px);
+  grid-template-rows: auto minmax(0, 1fr);
+  column-gap: 3vw;
+  row-gap: 1.2vw;
+  align-items: start;
+  min-height: 0;
   width: 100%;
 }
 
-.tv-row-middle {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  flex-shrink: 0;
-  transform-origin: top center;
+.tv-layout__innings {
+  grid-column: 1 / -1;
 }
 
-.tv-cell-score {
+.tv-left {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  align-content: start;
+  gap: clamp(8px, 1.2vh, 20px);
+  overflow: hidden;
+}
+
+.tv-right {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: clamp(12px, 2vh, 28px);
+  padding-left: 3vw;
+  border-left: 2px solid var(--color-border);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Right-column panels */
+.tv-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6vw;
+}
+
+.tv-panel__label {
+  font-family: var(--font-body);
+  font-size: 2vw;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-yellow);
+}
+
+.tv-panel__sub-label {
+  font-family: var(--font-body);
+  font-size: 1.4vw;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin-top: 1vw;
+}
+
+.tv-panel__name {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2.8vw, 42px);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.15;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.tv-panel__figures {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3.2vw, 48px);
+  font-weight: 800;
+  color: var(--color-mint);
+  line-height: 1.1;
+}
+
+.tv-panel__empty {
+  font-size: 2vw;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.tv-pair-current__number {
+  font-family: var(--font-display);
+  font-size: 2.4vw;
+  font-weight: 700;
+  color: var(--color-yellow);
+}
+
+.tv-pair-current__batters {
+  font-family: var(--font-body);
+  font-size: 2vw;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.tv-pair-current__runs {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4.5vw, 72px);
+  font-weight: 800;
+  color: var(--color-mint);
+  line-height: 1.1;
+}
+
+.tv-panel--bowler,
+.tv-panel--pair {
   flex-shrink: 0;
 }
 
-.tv-score-combo {
+.tv-panel--pair {
+  flex: 1;
+  min-height: 0;
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+}
+
+.tv-panel--pair .tv-pairs-ticker {
+  flex-direction: column;
+  align-items: flex-start;
   gap: 0.5vw;
+  max-width: 100%;
+  overflow-x: visible;
+  overflow-y: auto;
+  max-height: 28vh;
 }
 
-.tv-score-slash {
-  color: #648BC3;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 30vw;
-  line-height: 0.84;
+.tv-panel--pair .tv-pairs-ticker__item {
+  font-size: 1.8vw;
 }
 
-.tv-score-target {
-  color: #648BC3;
+/* Row 1: Innings — full width above both columns */
+.tv-innings-label {
+  color: var(--color-yellow);
+  font-size: clamp(28px, 3.5vw, 56px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* ── Left column: score block ─────────────────────────────────── */
+.tv-score-block {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tv-score-block__main {
+  width: 100%;
+  max-width: 100%;
+}
+
+.tv-score-line,
+.tv-portrait-score-line {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  max-width: 100%;
+}
+
+.tv-score,
+.tv-portrait-score {
+  color: var(--color-yellow);
   font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 30vw;
-  line-height: 0.84;
+  font-weight: 800;
+  font-size: 300px;
+  line-height: 1;
   white-space: nowrap;
 }
 
-/* Row 2: dots (full width) */
-.tv-row-bottom {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 1vw;
+.tv-score--chase,
+.tv-portrait-score--chase {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
 }
 
-/* Row 3: Over (label + value, single line) */
-.tv-row-over {
-  display: flex;
-  justify-content: center;
-  align-items: baseline;
-  gap: 12px;
+.tv-score__runs,
+.tv-portrait-score__runs {
+  color: var(--color-yellow);
+}
+
+.tv-score__slash,
+.tv-score__target,
+.tv-portrait-score__slash,
+.tv-portrait-score__target {
+  color: #648BC3;
+  font-weight: 800;
+}
+
+/* Chase meta — small single line, wraps cleanly if narrow */
+.tv-chase-info {
+  width: 100%;
+  max-width: 100%;
+  margin-top: clamp(6px, 0.8vh, 14px);
   flex-shrink: 0;
-  margin-top: -0.5vw;
+}
+
+.tv-chase-info__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35em 0.65em;
+  max-width: 100%;
+  line-height: 1.35;
+  font-family: var(--font-body);
+  font-size: clamp(13px, 1.6vw, 22px);
+  font-weight: 600;
+}
+
+.tv-chase-info__required {
+  color: var(--color-mint);
+  white-space: nowrap;
+}
+
+.tv-chase-info__sep {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.tv-chase-info__balls {
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.tv-chase-info--portrait {
+  text-align: center;
+  margin-top: clamp(8px, 1.5vh, 16px);
+}
+
+.tv-chase-info--portrait .tv-chase-info__line {
+  justify-content: center;
+  font-size: clamp(12px, 3.2vw, 20px);
+}
+
+/* Over row */
+.tv-left .tv-row-over {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5em 0.75em;
+  max-width: 100%;
+  flex-shrink: 0;
 }
 
 .tv-row-over__label {
@@ -232,7 +415,7 @@
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  font-size: 96px;
+  font-size: clamp(32px, 5vw, 80px);
   line-height: 1;
 }
 
@@ -240,74 +423,199 @@
   color: var(--color-mint);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 96px;
+  font-size: clamp(32px, 5vw, 80px);
   line-height: 1;
 }
 
-.tv-score {
-  color: var(--color-yellow);
-  font-family: var(--font-display);
-  font-weight: 800;
-  line-height: 0.84;
-  font-size: 30vw;
-  white-space: nowrap;
+/* Ball dots — contained, scroll horizontally */
+.tv-left .tv-row-bottom {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  align-self: stretch;
 }
 
-/* Ball history — horizontal scroll, no wrap */
-.tv-ball-history {
+.tv-left .tv-ball-history {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding-bottom: 1vw;
+  /* Reserve headroom for WD/NB/WKT tabs above the circles */
+  padding-top: clamp(28px, 3.5vw, 52px);
+  padding-bottom: clamp(4px, 0.8vw, 12px);
+  box-sizing: border-box;
 }
-
-.tv-ball-history::-webkit-scrollbar { display: none; }
 
 /* Scale up dots for TV — override ScoringScreen defaults */
 .tv-ball-history .over-ball-history {
   flex-wrap: nowrap;
   gap: 1.2vw;
   align-items: flex-end;
-  overflow: visible;
+  min-height: 7.5vw;
 }
 
 .tv-ball-history .ball-dot {
-  width: 6.5vw;
-  height: 6.5vw;
+  width: 7.5vw;
+  height: 7.5vw;
 }
 
 .tv-ball-history .ball-dot__value {
-  font-size: 2.2vw;
+  font-size: 2.6vw;
 }
 
 .tv-ball-history .ball-dot-tabbed__circle {
-  width: 6.5vw;
-  height: 6.5vw;
-  font-size: 2.2vw;
+  width: 7.5vw;
+  height: 7.5vw;
+  font-size: 2.6vw;
 }
 
 .tv-ball-history .ball-dot-tabbed__tab {
-  font-size: 1.4vw;
+  font-size: 1.6vw;
   line-height: 1.3;
   padding: 0.7vw 1.2vw;
-  min-width: 6.5vw;
-  margin-bottom: -0.6vw;
+  min-width: 7.5vw;
+  margin-bottom: -4px;
 }
 
 .tv-ball-history .ball-dot--placeholder {
-  width: 6.5vw;
-  height: 6.5vw;
+  width: 7.5vw;
+  height: 7.5vw;
+}
+
+.tv-pairs-ticker {
+  display: flex;
+  gap: 1.2vw;
+  overflow-x: auto;
+  scrollbar-width: none;
+  max-width: 90vw;
+}
+
+.tv-pairs-ticker::-webkit-scrollbar { display: none; }
+
+.tv-pairs-ticker__item {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-size: 1.4vw;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tv-pairs-ticker__item strong {
+  font-weight: 800;
+}
+
+.tv-pairs-ticker__item--current {
+  color: var(--color-yellow);
 }
 
 /* ── Portrait layout ─────────────────────────────────────────── */
 /* ── Portrait-only / landscape-only visibility ───────────────── */
-.tv-landscape-only { display: flex; }
+.tv-landscape-only { display: grid; }
 .tv-portrait-only  { display: none; }
 
 @media (orientation: portrait) {
   .tv-landscape-only { display: none !important; }
-  .tv-portrait-only  { display: flex; flex-direction: column; width: 100%; gap: 0; }
+  .tv-portrait-only {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .tv-portrait-main {
+    flex: 1;
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    width: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .tv-portrait-row {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .tv-portrait-row--balls {
+    min-height: 0;
+    justify-content: flex-start;
+    width: 100%;
+    padding: 0 4vw 2vh;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .tv-portrait-side {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 4vw;
+    width: 100%;
+    padding: 2vh 5vw 0;
+    border-top: 2px solid var(--color-border);
+    margin-top: 2vh;
+  }
+
+  .tv-portrait-side .tv-panel {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    align-items: center;
+  }
+
+  .tv-portrait-side .tv-panel__label {
+    font-size: 3.5vw;
+  }
+
+  .tv-portrait-side .tv-panel__name {
+    font-size: 5vw;
+  }
+
+  .tv-portrait-side .tv-panel__figures {
+    font-size: 6vw;
+  }
+
+  .tv-portrait-side .tv-pair-current__number {
+    font-size: 4vw;
+  }
+
+  .tv-portrait-side .tv-pair-current__batters {
+    font-size: 3.8vw;
+  }
+
+  .tv-portrait-side .tv-pair-current__runs {
+    font-size: 14vw;
+  }
+
+  .tv-portrait-side .tv-panel__sub-label {
+    font-size: 3vw;
+    margin-top: 1vh;
+  }
+
+  .tv-pairs-ticker--portrait {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 100%;
+    gap: 2vw;
+  }
+
+  .tv-pairs-ticker--portrait .tv-pairs-ticker__item {
+    font-size: 4vw;
+  }
 
   /* TV-sized fixed pixel values overflow a phone's narrow width —
      scale down to fit, "OUT ☝️" in particular being much wider than
@@ -326,17 +634,6 @@
     justify-content: flex-start;
     gap: 0;
     padding: 12px 0;
-  }
-
-  /* Each row — centred, full width */
-  .tv-portrait-row {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    flex: 1;
   }
 
   .tv-portrait-label {
@@ -415,88 +712,72 @@
 
   .tv-portrait-run-this-over {
     font-family: var(--font-display);
-    font-size: 10vw;
+    font-size: 14vw;
     font-weight: 700;
     color: var(--color-text-primary);
     line-height: 1;
   }
 
-  /* Row 3 — Runs (2× biggest) */
+  /* Row 3 — Runs */
   .tv-portrait-row--runs {
     margin-bottom: 2vh;
-    padding-bottom: 2vh;
+    padding: 0 4vw 2vh;
     border-bottom: 1px solid #648BC3;
+    box-sizing: border-box;
   }
 
-  .tv-portrait-row--runs .tv-portrait-label {
-    font-size: 7vw;
-    color: var(--color-mint);
+  .tv-portrait-score-block {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .tv-portrait-score {
-    font-family: var(--font-display);
-    font-size: min(50vw, 28vh);
-    font-weight: 800;
-    color: var(--color-yellow);
-    line-height: 0.9;
+    font-size: 300px;
   }
 
-  /* Row 4 — Pair total */
-  .tv-portrait-row--pair {
-    margin-bottom: 2vh;
-    padding-bottom: 2vh;
-    border-bottom: 1px solid #648BC3;
+  .tv-portrait-score-line {
+    justify-content: center;
   }
 
-  .tv-portrait-pair {
-    font-family: var(--font-display);
-    font-size: 12vw;
-    font-weight: 700;
-    color: var(--color-text-primary);
-    line-height: 1;
-  }
-
-  /* Row 5 — Balls, 4 per row, wrap */
-  .tv-portrait-row--balls {
-    margin-bottom: 0;
-    width: calc(100% + 10vw);
-    margin-left: -5vw;
-    margin-right: -5vw;
-    padding: 0;
-  }
-
+  /* Portrait ball dots */
   .tv-portrait-balls {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     display: flex;
-    justify-content: center;
-    padding: 0 5vw;
+    justify-content: flex-start;
+    padding-top: clamp(24px, 5vw, 40px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tv-portrait-balls::-webkit-scrollbar {
+    display: none;
   }
 
   .tv-portrait-balls .over-ball-history {
     display: flex;
     flex-wrap: nowrap;
     gap: 1.5vw;
-    padding: 2vw 0;
-    overflow-x: auto;
-    overflow-y: visible;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    justify-content: center;
-  }
-
-  .tv-portrait-balls .over-ball-history::-webkit-scrollbar {
-    display: none;
+    padding: 0 0 2vw;
+    align-items: flex-end;
+    min-height: 13.5vw;
   }
 
   .tv-portrait-balls .ball-dot {
-    width: 12vw;
-    height: 12vw;
+    width: 13.5vw;
+    height: 13.5vw;
     margin: 0;
     flex-shrink: 0;
   }
 
   .tv-portrait-balls .ball-dot__value {
-    font-size: 7vw;
+    font-size: 7.8vw;
   }
 
   .tv-portrait-balls .ball-dot-tabbed {
@@ -506,13 +787,13 @@
   }
 
   .tv-portrait-balls .ball-dot-tabbed__circle {
-    width: 12vw;
-    height: 12vw;
+    width: 13.5vw;
+    height: 13.5vw;
   }
 
   .tv-portrait-balls .ball-dot-tabbed__tab {
-    font-size: 3.6vw;
+    font-size: 4vw;
     padding: 0.5vw 1.2vw;
-    min-width: 10vw;
+    min-width: 11vw;
   }
 }

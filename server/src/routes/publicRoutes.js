@@ -4,6 +4,8 @@ const { pool } = require('../db/pool');
 const { totalOversForSquadSize } = require('../utils/scoringEngine');
 const { validateMatchData } = require('../utils/validateMatchData');
 const { logValidationIssue } = require('../utils/logValidationIssues');
+const { requireUuidParam } = require('../middleware/validateUuid');
+const { isValidUuid } = require('../utils/uuid');
 
 const router = express.Router();
 
@@ -26,11 +28,160 @@ router.get('/matches', async (req, res, next) => {
 });
 
 /**
+ * GET /api/public/matches/lookup/:joinCode
+ *
+ * "Join a match" entry point: accepts the 4-digit numeric join code
+ * (generated when the match was created, shown in the hamburger menu)
+ * and returns the full UUID so the joining device can call
+ * /matches/:matchId/rehydrate.
+ *
+ * Registered before /matches/:matchId so "lookup" is never treated as a UUID.
+ */
+router.get('/matches/lookup/:joinCode', async (req, res, next) => {
+  const { joinCode } = req.params;
+  if (!joinCode || !/^\d{4}$/.test(joinCode)) {
+    return res.status(400).json({ error: 'Join code must be exactly 4 digits.' });
+  }
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, team_a_name, team_b_name, status
+       FROM match
+       WHERE join_code = $1 AND deleted_at IS NULL
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [parseInt(joinCode, 10)]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'No match found with that code. Check the number and try again.' });
+    res.json({ matchId: rows[0].id, teamAName: rows[0].team_a_name, teamBName: rows[0].team_b_name, status: rows[0].status });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * DELETE /api/public/matches/:matchId
+ * Soft-delete a match when the caller supplies the correct 4-digit join code.
+ */
+router.delete('/matches/:matchId', requireUuidParam('matchId'), async (req, res, next) => {
+  const { matchId } = req.params;
+  const joinCodeRaw = req.body?.joinCode;
+  const joinCodeStr = joinCodeRaw != null ? String(joinCodeRaw).trim() : '';
+
+  if (!/^\d{4}$/.test(joinCodeStr)) {
+    return res.status(400).json({ error: 'Match code is required (4 digits).' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `UPDATE match SET deleted_at = now()
+       WHERE id = $1 AND join_code = $2 AND deleted_at IS NULL
+       RETURNING id`,
+      [matchId, parseInt(joinCodeStr, 10)]
+    );
+
+    if (rows.length === 0) {
+      return res.status(403).json({ error: 'Invalid match code or match not found.' });
+    }
+
+    await pool.query(
+      `INSERT INTO audit_log (match_id, actor, action, detail) VALUES ($1, $2, $3, $4)`,
+      [matchId, 'public:join_code', 'match_deleted', JSON.stringify({ via: 'matches_list' })]
+    );
+
+    res.json({ deleted: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/public/player-stats
+ * Career stats aggregated across all non-deleted matches, grouped by player name.
+ */
+router.get('/player-stats', async (req, res, next) => {
+  try {
+    const { rows: battingStats } = await pool.query(
+      `SELECT
+         vbs.display_name,
+         COUNT(DISTINCT vbs.match_id) AS matches_played,
+         COALESCE(SUM(vbs.balls_faced), 0) AS balls_faced,
+         COALESCE(SUM(vbs.runs_scored), 0) AS runs_scored,
+         COALESCE(SUM(vbs.fours), 0) AS fours,
+         COALESCE(SUM(vbs.sixes), 0) AS sixes,
+         COALESCE(SUM(vbs.times_dismissed), 0) AS times_dismissed,
+         CASE WHEN COALESCE(SUM(vbs.balls_faced), 0) > 0
+           THEN ROUND(100.0 * COALESCE(SUM(vbs.runs_scored), 0) / SUM(vbs.balls_faced), 2)
+           ELSE 0 END AS strike_rate
+       FROM v_batting_stats vbs
+       JOIN match m ON m.id = vbs.match_id AND m.deleted_at IS NULL
+       GROUP BY vbs.display_name
+       HAVING COALESCE(SUM(vbs.balls_faced), 0) > 0
+       ORDER BY COALESCE(SUM(vbs.runs_scored), 0) - COALESCE(SUM(vbs.times_dismissed), 0) * 5 DESC,
+                vbs.display_name ASC`
+    );
+
+    const { rows: bowlingStats } = await pool.query(
+      `SELECT
+         vbs.display_name,
+         COUNT(DISTINCT vbs.match_id) AS matches_bowled,
+         COALESCE(SUM(vbs.legal_balls_bowled), 0) AS legal_balls_bowled,
+         COALESCE(SUM(vbs.runs_conceded), 0) AS runs_conceded,
+         COALESCE(SUM(vbs.bowler_credited_wickets), 0) AS wickets,
+         COALESCE(SUM(extra.extra_runs), 0) AS extra_runs
+       FROM v_bowling_stats vbs
+       JOIN match m ON m.id = vbs.match_id AND m.deleted_at IS NULL
+       LEFT JOIN LATERAL (
+         SELECT COALESCE(SUM(d.extra_runs), 0) AS extra_runs
+         FROM bowling_spell bs
+         JOIN delivery d ON d.bowling_spell_id = bs.id AND d.is_undone = false
+         WHERE bs.bowler_id = vbs.player_id AND bs.innings_id = vbs.innings_id
+       ) extra ON true
+       GROUP BY vbs.display_name
+       HAVING COALESCE(SUM(vbs.legal_balls_bowled), 0) > 0
+       ORDER BY COALESCE(SUM(vbs.bowler_credited_wickets), 0) DESC,
+                vbs.display_name ASC`
+    );
+
+    const { rows: fieldingStats } = await pool.query(
+      `SELECT
+         mp.display_name,
+         COUNT(DISTINCT i.match_id) AS matches_fielded,
+         COALESCE(SUM(CASE WHEN d.wicket_type = 'caught' THEN 1 ELSE 0 END), 0) AS catches,
+         COALESCE(SUM(CASE WHEN d.wicket_type = 'run_out' THEN 1 ELSE 0 END), 0) AS run_outs,
+         COALESCE(SUM(CASE WHEN d.wicket_type = 'stumped' THEN 1 ELSE 0 END), 0) AS stumpings
+       FROM delivery d
+       JOIN innings i ON i.id = d.innings_id
+       JOIN match m ON m.id = i.match_id AND m.deleted_at IS NULL
+       JOIN match_player mp ON mp.id = d.fielder_id
+       WHERE d.is_undone = false AND d.fielder_id IS NOT NULL
+       GROUP BY mp.display_name
+       HAVING COALESCE(SUM(CASE WHEN d.wicket_type IN ('caught', 'run_out', 'stumped') THEN 1 ELSE 0 END), 0) > 0
+       ORDER BY
+         COALESCE(SUM(CASE WHEN d.wicket_type IN ('caught', 'run_out', 'stumped') THEN 1 ELSE 0 END), 0) DESC,
+         mp.display_name ASC`
+    );
+
+    const { rows: matchCountRows } = await pool.query(
+      'SELECT COUNT(*) AS total FROM match WHERE deleted_at IS NULL'
+    );
+
+    res.json({
+      matchCount: Number(matchCountRows[0]?.total ?? 0),
+      battingStats,
+      bowlingStats,
+      fieldingStats,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * GET /api/public/matches/:matchId
  * Full match summary: both teams' batting/bowling lines, per the
  * "3 June 2026 / Team A won by 19 runs" screen.
  */
-router.get('/matches/:matchId', async (req, res, next) => {
+router.get('/matches/:matchId', requireUuidParam('matchId'), async (req, res, next) => {
   const { matchId } = req.params;
   try {
     const { rows: matchRows } = await pool.query(
@@ -38,6 +189,14 @@ router.get('/matches/:matchId', async (req, res, next) => {
       [matchId]
     );
     if (matchRows.length === 0) return res.status(404).json({ error: 'Match not found.' });
+
+    const { rows: roster } = await pool.query(
+      `SELECT id, display_name, team, squad_position
+       FROM match_player
+       WHERE match_id = $1
+       ORDER BY team, squad_position`,
+      [matchId]
+    );
 
     const { rows: battingStats } = await pool.query(
       `SELECT vbs.*,
@@ -157,6 +316,7 @@ router.get('/matches/:matchId', async (req, res, next) => {
 
     res.json({
       match: matchRows[0],
+      roster,
       battingStats,
       bowlingStats,
       innings,
@@ -175,7 +335,7 @@ router.get('/matches/:matchId', async (req, res, next) => {
  * GET /api/public/matches/:matchId/players/:playerId
  * Individual player detail screen ("Shafin — Man of the match — Batting / Bowling").
  */
-router.get('/matches/:matchId/players/:playerId', async (req, res, next) => {
+router.get('/matches/:matchId/players/:playerId', requireUuidParam('matchId', 'playerId'), async (req, res, next) => {
   const { matchId, playerId } = req.params;
   try {
     const { rows: playerRows } = await pool.query(
@@ -241,7 +401,7 @@ router.get('/matches/:matchId/players/:playerId', async (req, res, next) => {
  * same delivery-insert path (see index.js) — this REST endpoint is the
  * fallback/initial-load path.
  */
-router.get('/matches/:matchId/live', async (req, res, next) => {
+router.get('/matches/:matchId/live', requireUuidParam('matchId'), async (req, res, next) => {
   const { matchId } = req.params;
   try {
     const { rows } = await pool.query(
@@ -279,7 +439,7 @@ router.get('/rules', async (req, res, next) => {
  * UI to re-sync after an UNDO, since undoing a delivery can change who
  * should be facing the next ball.
  */
-router.get('/pair-innings/:pairInningsId/state', async (req, res, next) => {
+router.get('/pair-innings/:pairInningsId/state', requireUuidParam('pairInningsId'), async (req, res, next) => {
   const { pairInningsId } = req.params;
   try {
     const { rows } = await pool.query(
@@ -310,6 +470,9 @@ router.get('/live-now', async (req, res, next) => {
     const { matchId } = req.query;
     let match;
     if (matchId) {
+      if (!isValidUuid(matchId)) {
+        return res.status(400).json({ error: 'Invalid matchId query parameter.' });
+      }
       const { rows } = await pool.query(
         'SELECT id, team_a_name, team_b_name, status FROM match WHERE id = $1 AND deleted_at IS NULL',
         [matchId]
@@ -377,6 +540,7 @@ router.get('/live-now', async (req, res, next) => {
     // penalty_runs so this can correctly go negative after a wicket).
     const { rows: pairRows } = await pool.query(
       `SELECT
+         pi.pair_number,
          pis.current_striker_id, sp.display_name AS striker_name,
          pis.current_non_striker_id, nsp.display_name AS non_striker_name,
          vpit.pair_total_runs
@@ -397,7 +561,7 @@ router.get('/live-now', async (req, res, next) => {
     // more reliable than spell creation order if a previous bowler is
     // ever brought back (not expected tonight, but safer).
     const { rows: bowlerRows } = await pool.query(
-      `SELECT mp.display_name AS bowler_name
+      `SELECT mp.id AS bowler_id, mp.display_name AS bowler_name
        FROM delivery d
        JOIN bowling_spell bs ON bs.id = d.bowling_spell_id
        JOIN match_player mp ON mp.id = bs.bowler_id
@@ -406,6 +570,43 @@ router.get('/live-now', async (req, res, next) => {
        LIMIT 1`,
       [innings.innings_id]
     );
+
+    // Current bowler's full-innings figures (not just this over) — pulled
+    // from v_bowling_stats, which already aggregates across every spell
+    // that bowler has had in this innings. Only queried if a bowler
+    // exists yet (first ball of the innings has none).
+    let bowlerFigures = { oversBowled: '0.0', runsConceded: 0, wickets: 0 };
+    if (bowlerRows[0]?.bowler_id) {
+      const { rows: figureRows } = await pool.query(
+        `SELECT legal_balls_bowled, runs_conceded, bowler_credited_wickets
+         FROM v_bowling_stats
+         WHERE innings_id = $1 AND player_id = $2`,
+        [innings.innings_id, bowlerRows[0].bowler_id]
+      );
+      const legalBalls = parseInt(figureRows[0]?.legal_balls_bowled ?? '0', 10);
+      bowlerFigures = {
+        oversBowled: `${Math.floor(legalBalls / 6)}.${legalBalls % 6}`,
+        runsConceded: Number(figureRows[0]?.runs_conceded ?? 0),
+        wickets: Number(figureRows[0]?.bowler_credited_wickets ?? 0),
+      };
+    }
+
+    // All batting pairs so far this innings, collapsed to one row per
+    // pair_number (a pair can have multiple pair_innings "stints" if
+    // play paused and resumed) — used for the live view's pair-by-pair
+    // ticker. Ordered oldest-first so the current pair is always last.
+    const { rows: allPairRows } = await pool.query(
+      `SELECT pair_number, SUM(pair_total_runs) AS total_runs
+       FROM v_pair_innings_totals
+       WHERE innings_id = $1
+       GROUP BY pair_number
+       ORDER BY pair_number ASC`,
+      [innings.innings_id]
+    );
+    const allPairs = allPairRows.map((row) => ({
+      pairNumber: row.pair_number,
+      totalRuns: Number(row.total_runs),
+    }));
 
     // Total overs allowed this innings, derived from the BATTING team's
     // squad size (rule: 8 players = 16 overs, 10 players = 20 overs).
@@ -452,6 +653,9 @@ router.get('/live-now', async (req, res, next) => {
       strikerName: pairRows[0]?.striker_name ?? null,
       nonStrikerName: pairRows[0]?.non_striker_name ?? null,
       bowlerName: bowlerRows[0]?.bowler_name ?? null,
+      bowlerFigures,
+      allPairs,
+      currentPairNumber: pairRows[0]?.pair_number ?? null,
       totalOvers,
       // Only present on innings 2 (the chasing team) — null on innings 1,
       // since there's no target yet. Can go negative once the target is
@@ -472,35 +676,6 @@ router.get('/live-now', async (req, res, next) => {
 });
 
 /**
- * GET /api/public/matches/lookup/:joinCode
- *
- * "Join a match" entry point: accepts the 4-digit numeric join code
- * (generated when the match was created, shown in the hamburger menu)
- * and returns the full UUID so the joining device can call
- * /matches/:matchId/rehydrate.
- */
-router.get('/matches/lookup/:joinCode', async (req, res, next) => {
-  const { joinCode } = req.params;
-  if (!joinCode || !/^\d{4}$/.test(joinCode)) {
-    return res.status(400).json({ error: 'Join code must be exactly 4 digits.' });
-  }
-  try {
-    const { rows } = await pool.query(
-      `SELECT id, team_a_name, team_b_name, status
-       FROM match
-       WHERE join_code = $1 AND deleted_at IS NULL
-       ORDER BY created_at DESC
-       LIMIT 1`,
-      [parseInt(joinCode, 10)]
-    );
-    if (rows.length === 0) return res.status(404).json({ error: 'No match found with that code. Check the number and try again.' });
-    res.json({ matchId: rows[0].id, teamAName: rows[0].team_a_name, teamBName: rows[0].team_b_name, status: rows[0].status });
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
  * GET /api/public/matches/:matchId/innings/:inningsId/over-deliveries
  *
  * Public mirror of the authenticated over-deliveries endpoint — needed
@@ -510,7 +685,7 @@ router.get('/matches/lookup/:joinCode', async (req, res, next) => {
  * response shape, just accessible without a token so the read-only TV
  * view can fetch ball-history dots without silently failing.
  */
-router.get('/matches/:matchId/innings/:inningsId/over-deliveries', async (req, res, next) => {
+router.get('/matches/:matchId/innings/:inningsId/over-deliveries', requireUuidParam('matchId', 'inningsId'), async (req, res, next) => {
   const { inningsId } = req.params;
   const overNumber = parseInt(req.query.overNumber, 10);
   if (Number.isNaN(overNumber)) {

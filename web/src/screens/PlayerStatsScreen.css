@@ -1,0 +1,299 @@
+/* PlayerStatsScreen.css — compact one-line leaderboard */
+
+.player-stats-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-navy-900);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.ps-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-6) 16px var(--space-3);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--color-navy-900);
+  border-bottom: 1px solid rgba(100, 139, 195, 0.25);
+}
+
+.ps-header__back {
+  background: none;
+  border: none;
+  color: var(--color-yellow);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.ps-header__title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  padding-right: 24px;
+}
+
+.ps-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-3) 0 var(--space-6);
+}
+
+.ps-loading,
+.ps-error {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) 24px;
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.ps-error { color: var(--color-coral); }
+
+/* ── One-line summary ───────────────────────────────────────── */
+
+.ps-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35em;
+  margin: 0 16px var(--space-4);
+  padding: 10px 14px;
+  border: 1px solid rgba(100, 139, 195, 0.35);
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.ps-summary__label {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+.ps-summary__sep {
+  opacity: 0.5;
+}
+
+.ps-summary--batting { border-color: rgba(62, 207, 142, 0.4); }
+.ps-summary--bowling { border-color: rgba(239, 123, 94, 0.4); }
+.ps-summary--fielding { border-color: rgba(245, 200, 66, 0.4); }
+
+/* ── Tabs ───────────────────────────────────────────────────── */
+
+.ps-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin: 0 16px var(--space-4);
+  padding: 4px;
+  background: rgba(100, 139, 195, 0.12);
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(100, 139, 195, 0.25);
+}
+
+.ps-tab {
+  flex: 1;
+  min-height: 40px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ps-tab--active.ps-tab--batting {
+  background: var(--color-mint);
+  color: var(--color-navy-900);
+}
+
+.ps-tab--active.ps-tab--bowling {
+  background: var(--color-coral);
+  color: var(--color-navy-900);
+}
+
+.ps-tab--active.ps-tab--fielding {
+  background: var(--color-yellow);
+  color: var(--color-yellow-text);
+}
+
+/* ── Table (one row per player) ─────────────────────────────── */
+
+.ps-table {
+  border-top: 1.5px solid rgba(100, 139, 195, 0.35);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ps-table--batting { border-top-color: rgba(62, 207, 142, 0.35); }
+.ps-table--bowling { border-top-color: rgba(239, 123, 94, 0.35); }
+.ps-table--fielding { border-top-color: rgba(245, 200, 66, 0.35); }
+
+.ps-table__head,
+.ps-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: max-content;
+  padding: 0 16px;
+}
+
+.ps-table__head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--color-navy-900);
+  border-bottom: 1px solid rgba(100, 139, 195, 0.25);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.ps-table__head-rank,
+.ps-row__rank {
+  flex-shrink: 0;
+  width: 28px;
+  text-align: center;
+}
+
+.ps-table__head-name,
+.ps-row__name {
+  flex-shrink: 0;
+  width: 100px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-table__head-name {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ps-table__head-stats,
+.ps-row__stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+}
+
+.ps-table__head-cell,
+.ps-row__cell {
+  flex-shrink: 0;
+  width: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.ps-table__head-cell {
+  width: 44px;
+}
+
+.ps-row {
+  border-bottom: 1px solid rgba(100, 139, 195, 0.12);
+  min-height: 48px;
+}
+
+.ps-row:last-child {
+  border-bottom: none;
+}
+
+.ps-row--top-1 { background: rgba(245, 200, 66, 0.06); }
+.ps-row--top-2 { background: rgba(192, 192, 192, 0.05); }
+.ps-row--top-3 { background: rgba(205, 127, 50, 0.05); }
+
+.ps-row__rank {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+}
+
+.ps-row--top-1 .ps-row__rank { color: var(--color-yellow); }
+.ps-row--top-2 .ps-row__rank { color: #c0c0c0; }
+.ps-row--top-3 .ps-row__rank { color: #cd7f32; }
+
+.ps-row__name {
+  color: var(--color-text-primary);
+}
+
+.ps-row__cell-value {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.ps-row--batting .ps-row__cell:first-child .ps-row__cell-value { color: var(--color-mint); }
+.ps-row--bowling .ps-row__cell:first-child .ps-row__cell-value { color: var(--color-coral); }
+.ps-row--fielding .ps-row__cell:first-child .ps-row__cell-value { color: var(--color-yellow); }
+
+.ps-row__cell-label {
+  display: none;
+}
+
+/* ── Empty ──────────────────────────────────────────────────── */
+
+.ps-empty {
+  text-align: center;
+  padding: var(--space-8) 24px;
+  margin: 0 16px;
+  border: 1.5px dashed rgba(100, 139, 195, 0.35);
+  border-radius: 12px;
+}
+
+.ps-empty__text {
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 480px) {
+  .ps-header__title { font-size: 22px; }
+  .ps-tab { font-size: 11px; min-height: 36px; }
+  .ps-table__head-name,
+  .ps-row__name { width: 84px; font-size: 14px; }
+  .ps-table__head-cell,
+  .ps-row__cell { width: 38px; }
+  .ps-row__cell-value { font-size: 14px; }
+  .ps-summary { font-size: 13px; }
+}
+
+@media (min-width: 641px) {
+  .ps-body {
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}

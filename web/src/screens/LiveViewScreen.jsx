@@ -6,6 +6,67 @@ import './LiveViewScreen.css';
 const POLL_INTERVAL_MS = 4000;
 const ANIMATION_DURATION_MS = 3000;
 
+function getBallsRemaining(liveData) {
+  if (liveData.totalOvers == null) return null;
+  const totalLegalBalls = liveData.totalOvers * 6;
+  const legalBallsUsed = liveData.overNumber * 6 + liveData.ballNumberInOver;
+  return Math.max(0, totalLegalBalls - legalBallsUsed);
+}
+
+function formatRunsRequired(runsRequired) {
+  if (runsRequired == null) return null;
+  if (runsRequired <= 0) return 'Target reached';
+  return `${runsRequired} run${runsRequired === 1 ? '' : 's'} required`;
+}
+
+function formatBallsLeft(ballsLeft) {
+  if (ballsLeft == null) return null;
+  return `${ballsLeft} ball${ballsLeft === 1 ? '' : 's'} left`;
+}
+
+function MainScore({ liveData, isChasing, className = 'tv-score' }) {
+  if (isChasing) {
+    return (
+      <div className={`${className}-line`}>
+        <span className={`${className} ${className}--chase`}>
+          <span className={`${className}__runs`}>{liveData.totalRuns}</span>
+          <span className={`${className}__slash`}>/</span>
+          <span className={`${className}__target`}>{liveData.targetRuns}</span>
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${className}-line`}>
+      <span className={className}>{liveData.totalRuns}</span>
+    </div>
+  );
+}
+
+function ChaseInfo({ liveData, portrait = false }) {
+  if (liveData.inningsNumber !== 2 || liveData.targetRuns == null) return null;
+
+  const runsRequired = liveData.runsRequired;
+  const ballsLeft = getBallsRemaining(liveData);
+  const requiredText = formatRunsRequired(runsRequired);
+  const ballsText = ballsLeft != null ? formatBallsLeft(ballsLeft) : null;
+
+  return (
+    <div className={`tv-chase-info${portrait ? ' tv-chase-info--portrait' : ''}`}>
+      <div className="tv-chase-info__line">
+        <span className="tv-chase-info__required">{requiredText}</span>
+        {ballsText && (
+          <>
+            <span className="tv-chase-info__sep">·</span>
+            <span className="tv-chase-info__balls">{ballsText}</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function LiveViewScreen({ matchId = null }) {
   const [liveData, setLiveData] = useState(null);
   const [overDeliveries, setOverDeliveries] = useState([]);
@@ -15,10 +76,6 @@ export default function LiveViewScreen({ matchId = null }) {
   const [celebrationKey, setCelebrationKey] = useState(0);
   const [overNotification, setOverNotification] = useState(false);
   const pollRef = useRef(null);
-  const middleRowRef = useRef(null);
-  const middleWrapperRef = useRef(null);
-  const [middleScale, setMiddleScale] = useState(1);
-  const [middleWrapperHeight, setMiddleWrapperHeight] = useState('auto');
   const lastDeliveryIdRef = useRef(null);
   const previousOverNumberRef = useRef(null);
   const initialisedRef = useRef(false); // true after first delivery fetch — prevents stale animation on refresh
@@ -129,62 +186,6 @@ export default function LiveViewScreen({ matchId = null }) {
     return () => { cancelled = true; };
   }, [liveData?.matchId, liveData?.inningsId, liveData?.overNumber, liveData?.totalRuns, liveData?.totalWickets]);
 
-  // The score/target + over row uses a large fixed vw font size that can
-  // exceed the available width or height once digits stack up (e.g.
-  // "129/250" next to "OVER 12.4"). Scale the whole row down to fit
-  // both dimensions rather than clipping or pushing the dots row off-screen.
-  useEffect(() => {
-    const el = middleRowRef.current;
-    const wrapper = middleWrapperRef.current;
-    const card = wrapper?.parentElement;
-    if (!el || !wrapper || !card) return;
-
-    function recompute() {
-      // No need to reset transform/height before measuring — CSS
-      // transforms never affect scrollWidth/scrollHeight, and the
-      // wrapper's own height doesn't constrain its child's natural size
-      // (overflow is visible). Mutating them directly here raced with
-      // the ResizeObserver's guaranteed initial callback and could leave
-      // the element stuck at an unscaled transform.
-      const gap = parseFloat(window.getComputedStyle(card).gap) || 0;
-      const inningsRow = card.querySelector('.tv-row-innings');
-      const overRow = card.querySelector('.tv-row-over');
-      const bottomRow = card.querySelector('.tv-row-bottom');
-      const inningsHeight = inningsRow ? inningsRow.offsetHeight : 0;
-      const overRowHeight = overRow ? overRow.offsetHeight : 0;
-      const bottomHeight = bottomRow ? bottomRow.offsetHeight : 0;
-
-      const naturalWidth = el.scrollWidth;
-      const naturalHeight = el.scrollHeight;
-      // Leave generous breathing room on both axes — real TVs often crop
-      // a few percent of the picture via overscan, so fitting exactly to
-      // the measured viewport still ends up clipped at the physical edge.
-      const availableWidth = card.clientWidth * 0.85;
-      const availableHeight = (card.clientHeight - inningsHeight - overRowHeight - bottomHeight - gap * 3) * 0.96;
-
-      const widthScale = naturalWidth > availableWidth ? availableWidth / naturalWidth : 1;
-      const heightScale = naturalHeight > availableHeight ? availableHeight / naturalHeight : 1;
-      const scale = Math.min(widthScale, heightScale, 1);
-
-      setMiddleScale(scale);
-      setMiddleWrapperHeight(naturalHeight * scale);
-    }
-
-    recompute();
-    window.addEventListener('resize', recompute);
-
-    // Some TV/embedded browsers don't fire window 'resize' reliably even
-    // though layout settles a frame or two after mount — watch the card
-    // itself so we catch that regardless.
-    const resizeObserver = new ResizeObserver(() => recompute());
-    resizeObserver.observe(card);
-
-    return () => {
-      window.removeEventListener('resize', recompute);
-      resizeObserver.disconnect();
-    };
-  }, [liveData?.totalRuns, liveData?.targetRuns, liveData?.overNumber, liveData?.ballNumberInOver, liveData?.inningsNumber]);
-
   function triggerCelebration(data) {
     if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current);
     // Increment key to force a full remount of the overlay element —
@@ -252,95 +253,182 @@ export default function LiveViewScreen({ matchId = null }) {
 
       <div className="tv-card">
 
-        {/* Landscape layout — Row 1: Innings, Row 2: Score/Target, Row 3: Over, Row 4: dots */}
-        <div className="tv-row-innings tv-landscape-only">
-          <div className="tv-innings-label">INNINGS {liveData.inningsNumber}</div>
-        </div>
+        {/* Two-column layout: left = score/overs/balls, right = bowler/pairs */}
+        <div className="tv-layout tv-landscape-only">
+          <div className="tv-layout__innings">
+            <div className="tv-innings-label">INNINGS {liveData.inningsNumber}</div>
+          </div>
 
-        <div
-          className="tv-row-middle-wrapper tv-landscape-only"
-          ref={middleWrapperRef}
-          style={{ height: middleWrapperHeight }}
-        >
-          <div
-            className="tv-row-middle"
-            ref={middleRowRef}
-            style={{ transform: `scale(${middleScale})` }}
-          >
-            <div className="tv-cell-score">
-              <div className="tv-score-combo">
-                <span className="tv-score">{liveData.totalRuns}</span>
-                {isChasing && (
-                  <>
-                    <span className="tv-score-slash">/</span>
-                    <span className="tv-score-target">{liveData.targetRuns}</span>
-                  </>
-                )}
+          <div className="tv-left">
+            <div className="tv-score-block">
+              <div className="tv-score-block__main">
+                <MainScore liveData={liveData} isChasing={isChasing} />
+              </div>
+              {isChasing && <ChaseInfo liveData={liveData} />}
+            </div>
+
+            <div className="tv-row-over">
+              <span className="tv-row-over__label">OVER</span>
+              <span className="tv-row-over__value">
+                {liveData.overNumber}.{liveData.ballNumberInOver}
+              </span>
+            </div>
+
+            <div className="tv-row-bottom">
+              <div className="tv-ball-history">
+                <OverBallHistory deliveries={overDeliveries} />
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="tv-row-over tv-landscape-only">
-          <span className="tv-row-over__label">OVER</span>
-          <span className="tv-row-over__value">
-            {liveData.overNumber}.{liveData.ballNumberInOver}
-          </span>
-        </div>
-
-        <div className="tv-row-bottom tv-landscape-only">
-          <div className="tv-ball-history">
-            <OverBallHistory deliveries={overDeliveries} />
+          <div className="tv-right">
+            <BowlerStatePanel name={liveData.bowlerName} figures={liveData.bowlerFigures} />
+            <PairStatePanel
+              pairs={liveData.allPairs}
+              currentPairNumber={liveData.currentPairNumber}
+              pairTotalRuns={liveData.pairTotalRuns}
+              strikerName={liveData.strikerName}
+              nonStrikerName={liveData.nonStrikerName}
+            />
           </div>
         </div>
 
-        {/* Portrait layout — stacked rows */}
+        {/* Portrait — score/overs/balls on top, bowler/pairs below */}
         <div className="tv-portrait-only">
 
-          {/* Row 1 — Innings */}
-          <div className="tv-portrait-row tv-portrait-row--innings">
-            <div className="tv-portrait-label">INNINGS <span className="tv-portrait-innings-number">{liveData.inningsNumber}</span></div>
-            <div className="tv-portrait-team">{liveData.battingTeamName}</div>
-          </div>
-
-          {/* Row 2 — Over + Run this over side by side */}
-          <div className="tv-portrait-row tv-portrait-row--over-run">
-            <div className="tv-portrait-cell">
-              <div className="tv-portrait-label">OVER</div>
-              <div className="tv-portrait-over">{liveData.overNumber}.{liveData.ballNumberInOver}</div>
+          <div className="tv-portrait-main">
+            <div className="tv-portrait-row tv-portrait-row--innings">
+              <div className="tv-portrait-label">INNINGS <span className="tv-portrait-innings-number">{liveData.inningsNumber}</span></div>
             </div>
-            <div className="tv-portrait-divider" />
-            <div className="tv-portrait-cell">
-              <div className="tv-portrait-label">RUN THIS OVER</div>
-              <div className="tv-portrait-run-this-over">{liveData.runThisOver}</div>
+
+            <div className="tv-portrait-row tv-portrait-row--over-run">
+              <div className="tv-portrait-cell">
+                <div className="tv-portrait-label">OVER</div>
+                <div className="tv-portrait-over">{liveData.overNumber}.{liveData.ballNumberInOver}</div>
+              </div>
+              <div className="tv-portrait-divider" />
+              <div className="tv-portrait-cell">
+                <div className="tv-portrait-label">RUN THIS OVER</div>
+                <div className="tv-portrait-run-this-over">{liveData.runThisOver}</div>
+              </div>
+            </div>
+
+            <div className="tv-portrait-row tv-portrait-row--runs">
+              <div className="tv-portrait-score-block">
+                <MainScore liveData={liveData} isChasing={isChasing} className="tv-portrait-score" />
+                {isChasing && <ChaseInfo liveData={liveData} portrait />}
+              </div>
+            </div>
+
+            <div className="tv-portrait-row tv-portrait-row--balls">
+              <div className="tv-portrait-label">THIS OVER</div>
+              <div className="tv-portrait-balls">
+                <OverBallHistory deliveries={overDeliveries} />
+              </div>
             </div>
           </div>
 
-          {/* Row 3 — Runs (big) */}
-          <div className="tv-portrait-row tv-portrait-row--runs">
-            {isChasing && (
-              <div className="tv-portrait-label">RUNS REQ {liveData.runsRequired}</div>
-            )}
-            <div className="tv-portrait-score">{liveData.totalRuns}</div>
-          </div>
-
-          {/* Row 4 — Pair total */}
-          <div className="tv-portrait-row tv-portrait-row--pair">
-            <div className="tv-portrait-label">PAIR TOTAL</div>
-            <div className="tv-portrait-pair">{liveData.pairTotalRuns}</div>
-          </div>
-
-          {/* Row 5 — Ball dots, 4 per row, wrap naturally */}
-          <div className="tv-portrait-row tv-portrait-row--balls">
-            <div className="tv-portrait-label">THIS OVER</div>
-            <div className="tv-portrait-balls">
-              <OverBallHistory deliveries={overDeliveries} />
-            </div>
+          <div className="tv-portrait-side">
+            <BowlerStatePanel name={liveData.bowlerName} figures={liveData.bowlerFigures} portrait />
+            <PairStatePanel
+              pairs={liveData.allPairs}
+              currentPairNumber={liveData.currentPairNumber}
+              pairTotalRuns={liveData.pairTotalRuns}
+              strikerName={liveData.strikerName}
+              nonStrikerName={liveData.nonStrikerName}
+              portrait
+            />
           </div>
 
         </div>
 
       </div>
+    </div>
+  );
+}
+
+// BowlerStatePanel — current bowler name + innings figures (right column).
+function BowlerStatePanel({ name, figures, portrait = false }) {
+  return (
+    <div className={`tv-panel tv-panel--bowler${portrait ? ' tv-panel--portrait' : ''}`}>
+      <div className="tv-panel__label">Bowler</div>
+      {name ? (
+        <>
+          <div className="tv-panel__name">{name}</div>
+          <div className="tv-panel__figures">
+            {figures?.oversBowled ?? '0.0'}-{figures?.runsConceded ?? 0}-{figures?.wickets ?? 0}
+          </div>
+        </>
+      ) : (
+        <div className="tv-panel__empty">Not selected</div>
+      )}
+    </div>
+  );
+}
+
+// PairStatePanel — current pair batters + total, plus all pairs ticker.
+function PairStatePanel({
+  pairs,
+  currentPairNumber,
+  pairTotalRuns,
+  strikerName,
+  nonStrikerName,
+  portrait = false,
+}) {
+  return (
+    <div className={`tv-panel tv-panel--pair${portrait ? ' tv-panel--portrait' : ''}`}>
+      <div className="tv-panel__label">Pair</div>
+      {currentPairNumber != null ? (
+        <>
+          <div className="tv-pair-current__number">Pair {currentPairNumber}</div>
+          {(strikerName || nonStrikerName) && (
+            <div className="tv-pair-current__batters">
+              {strikerName ?? '—'} & {nonStrikerName ?? '—'}
+            </div>
+          )}
+          <div className="tv-pair-current__runs">{pairTotalRuns ?? 0}</div>
+        </>
+      ) : (
+        <div className="tv-panel__empty">—</div>
+      )}
+      <div className="tv-panel__sub-label">All pairs</div>
+      <PairsTicker pairs={pairs} currentPairNumber={currentPairNumber} portrait={portrait} />
+    </div>
+  );
+}
+
+// BowlerLine — kept for any legacy use; prefer BowlerStatePanel on live view.
+function BowlerLine({ name, figures }) {
+  if (!name) return null;
+  return (
+    <div className="tv-bowler-line">
+      <span className="tv-bowler-line__name">{name}</span>
+      <span className="tv-bowler-line__figures">
+        {figures?.oversBowled ?? '0.0'}-{figures?.runsConceded ?? 0}-{figures?.wickets ?? 0}
+      </span>
+    </div>
+  );
+}
+
+// PairsTicker — every batting pair's combined total so far this innings,
+// pair number only (no player names — see design decision), all on one
+// scrollable line with the current pair picked out in yellow.
+function PairsTicker({ pairs, currentPairNumber, portrait = false }) {
+  if (!pairs?.length) return <div className="tv-panel__empty">No pairs yet</div>;
+  return (
+    <div className={`tv-pairs-ticker${portrait ? ' tv-pairs-ticker--portrait' : ''}`}>
+      {pairs.map((p) => (
+        <span
+          key={p.pairNumber}
+          className={
+            p.pairNumber === currentPairNumber
+              ? 'tv-pairs-ticker__item tv-pairs-ticker__item--current'
+              : 'tv-pairs-ticker__item'
+          }
+        >
+          P{p.pairNumber} <strong>{p.totalRuns}</strong>
+        </span>
+      ))}
     </div>
   );
 }

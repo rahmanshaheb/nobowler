@@ -42,7 +42,16 @@ const IconCopy = () => (
   </svg>
 );
 
-export default function MatchMenuModal({ onClose, onEditTeams, onEndInnings, onOpenRulebook, onOpenScorecard, matchId, joinCode, wideCountEnabled = true, hasDeliveries = false, onToggleWideCount, canSwapBatting = false, battingTeamName = '', bowlingTeamName = '', teamAName = '', teamBName = '', battingIsTeamA = true, isSwapping = false, onSwapBatting, onExit }) {
+const IconPlayerStats = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 3v18h18"/>
+    <path d="M7 16v-5"/>
+    <path d="M12 16V8"/>
+    <path d="M17 16v-3"/>
+  </svg>
+);
+
+export default function MatchMenuModal({ onClose, onEditTeams, onEndInnings, onOpenRulebook, onOpenScorecard, onOpenPlayerStats, matchId, joinCode, wideCountEnabled = true, hasDeliveries = false, onToggleWideCount, canSwapBatting = false, battingTeamName = '', bowlingTeamName = '', teamAName = '', teamBName = '', battingIsTeamA = true, isSwapping = false, onSwapBatting, onExit }) {
   const [copied, setCopied] = useState(false);
   const [showWideConfirm, setShowWideConfirm] = useState(false);
   const [showSwapConfirm, setShowSwapConfirm] = useState(false);
@@ -103,8 +112,14 @@ export default function MatchMenuModal({ onClose, onEditTeams, onEndInnings, onO
           )}
 
           <button className="match-menu-item" onClick={() => handle(onOpenScorecard)}>
-            <IconScorecard /> Scorecard
+            <IconScorecard /> Score summary
           </button>
+
+          {onOpenPlayerStats && (
+            <button className="match-menu-item" onClick={() => handle(onOpenPlayerStats)}>
+              <IconPlayerStats /> Player stats
+            </button>
+          )}
 
           <div className={`match-menu-item match-menu-item--toggle${hasDeliveries ? ' match-menu-item--wide-locked' : ''}`} style={{ alignItems: 'flex-start' }}>
             <div style={{ paddingTop: 2 }}><IconToggle /></div>

@@ -13,6 +13,7 @@ const {
   getCurrentOverDeliveries,
 } = require('../controllers/matchController');
 const { recordDelivery, undoDelivery } = require('../controllers/deliveryController');
+const { requireUuidParam } = require('../middleware/validateUuid');
 
 const router = express.Router();
 
@@ -24,11 +25,11 @@ const router = express.Router();
 // with requireScorerPasscode from middleware/auth.js.
 
 router.post('/matches', createMatch);
-router.get('/matches/:matchId/rehydrate', rehydrateMatch);
-router.post('/matches/:matchId/players', addPlayers);
-router.patch('/matches/:matchId/players/:playerId', renamePlayer);
-router.patch('/matches/:matchId/team-name', renameTeam);
-router.patch('/matches/:matchId/wide-count', async (req, res, next) => {
+router.get('/matches/:matchId/rehydrate', requireUuidParam('matchId'), rehydrateMatch);
+router.post('/matches/:matchId/players', requireUuidParam('matchId'), addPlayers);
+router.patch('/matches/:matchId/players/:playerId', requireUuidParam('matchId', 'playerId'), renamePlayer);
+router.patch('/matches/:matchId/team-name', requireUuidParam('matchId'), renameTeam);
+router.patch('/matches/:matchId/wide-count', requireUuidParam('matchId'), async (req, res, next) => {
   try {
     const { matchId } = req.params;
     const { wideCountEnabled } = req.body;
@@ -40,15 +41,15 @@ router.patch('/matches/:matchId/wide-count', async (req, res, next) => {
     res.json({ wideCountEnabled: wideCountEnabled !== false });
   } catch (err) { next(err); }
 });
-router.post('/matches/:matchId/innings', startInnings);
-router.post('/matches/:matchId/innings/:inningsId/pairs', startPair);
-router.post('/matches/:matchId/innings/:inningsId/bowling-spells', startOrGetBowlingSpell);
-router.get('/matches/:matchId/innings/:inningsId/bowler-overs', getBowlerOvers);
-router.get('/matches/:matchId/innings/:inningsId/over-deliveries', getCurrentOverDeliveries);
-router.post('/innings/:inningsId/deliveries', recordDelivery);
-router.post('/deliveries/:deliveryId/undo', undoDelivery);
+router.post('/matches/:matchId/innings', requireUuidParam('matchId'), startInnings);
+router.post('/matches/:matchId/innings/:inningsId/pairs', requireUuidParam('matchId', 'inningsId'), startPair);
+router.post('/matches/:matchId/innings/:inningsId/bowling-spells', requireUuidParam('matchId', 'inningsId'), startOrGetBowlingSpell);
+router.get('/matches/:matchId/innings/:inningsId/bowler-overs', requireUuidParam('matchId', 'inningsId'), getBowlerOvers);
+router.get('/matches/:matchId/innings/:inningsId/over-deliveries', requireUuidParam('matchId', 'inningsId'), getCurrentOverDeliveries);
+router.post('/innings/:inningsId/deliveries', requireUuidParam('inningsId'), recordDelivery);
+router.post('/deliveries/:deliveryId/undo', requireUuidParam('deliveryId'), undoDelivery);
 
-router.patch('/matches/:matchId/swap-batting', async (req, res, next) => {
+router.patch('/matches/:matchId/swap-batting', requireUuidParam('matchId'), async (req, res, next) => {
   try {
     const { pool, withTransaction } = require('../db/pool');
     const { matchId } = req.params;
@@ -137,7 +138,7 @@ router.patch('/matches/:matchId/swap-batting', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.patch('/matches/:matchId/complete', async (req, res, next) => {
+router.patch('/matches/:matchId/complete', requireUuidParam('matchId'), async (req, res, next) => {
   try {
     const { pool } = require('../db/pool');
     await pool.query(
