@@ -39,10 +39,8 @@ async function createMatch(req, res, next) {
 
 /**
  * POST /api/matches/:matchId/players
- * Bulk-adds players to a team roster. Rule 1: 16-20 players total across
- * both teams combined is validated at the application layer (not DB) since
- * it depends on summing both teams' counts, which is awkward as a CHECK
- * constraint across rows; validated here before insert.
+ * Bulk-adds players to a team roster. Rule 1: up to 12 players per team,
+ * 24 total across both teams — validated here before insert.
  */
 async function addPlayers(req, res, next) {
   const { matchId } = req.params;
@@ -56,11 +54,31 @@ async function addPlayers(req, res, next) {
 
   try {
     const result = await withTransaction(async (client) => {
-      const { rows: existing } = await client.query(
+      const { rows: teamRows } = await client.query(
+        'SELECT COUNT(*) FROM match_player WHERE match_id = $1 AND team = $2',
+        [matchId, team]
+      );
+      const existingTeamCount = parseInt(teamRows[0].count, 10);
+      if (existingTeamCount + names.length > 12) {
+        throw Object.assign(
+          new Error(`A team can have at most 12 players (would be ${existingTeamCount + names.length} on team ${team}).`),
+          { statusCode: 422 }
+        );
+      }
+
+      const { rows: totalRows } = await client.query(
         'SELECT COUNT(*) FROM match_player WHERE match_id = $1',
         [matchId]
       );
-      const startPosition = parseInt(existing[0].count, 10);
+      const existingTotal = parseInt(totalRows[0].count, 10);
+      if (existingTotal + names.length > 24) {
+        throw Object.assign(
+          new Error(`Adding these players exceeds the 24-player maximum (would be ${existingTotal + names.length}).`),
+          { statusCode: 422 }
+        );
+      }
+
+      const startPosition = existingTotal;
 
       const inserted = [];
       for (let i = 0; i < names.length; i++) {
@@ -71,16 +89,6 @@ async function addPlayers(req, res, next) {
           [matchId, team, names[i], startPosition + i + 1]
         );
         inserted.push(rows[0]);
-      }
-
-      // Rule 1: total players across both teams must be 16-20.
-      const { rows: totalRows } = await client.query(
-        'SELECT COUNT(*) FROM match_player WHERE match_id = $1',
-        [matchId]
-      );
-      const total = parseInt(totalRows[0].count, 10);
-      if (total > 20) {
-        throw Object.assign(new Error(`Adding these players exceeds the 20-player maximum (would be ${total}).`), { statusCode: 422 });
       }
 
       return inserted;

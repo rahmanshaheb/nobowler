@@ -268,23 +268,19 @@ function validateBowlerOverLimit(legalBallsAlreadyBowled) {
 
 /**
  * Total overs in an innings, derived from how many players are on the
- * BATTING team's roster — confirmed rule: 8 players = 16 overs (4 pairs
- * x 4 overs, clean), 10 players = 20 overs (5 pairs x 4 overs, clean).
+ * BATTING team's roster. Each pair bats 4 overs; pair count is
+ * ceil(squadSize / 2) — odd squads re-use a player to fill the last pair
+ * (e.g. 9 players → 5 pairs → 20 overs, same as 10 players).
  *
- * 9 players is a confirmed edge case: the overs total is 20, same as a
- * full 10-player squad, since one player makes up the pair a second
- * time. Only the ROTATION mechanics (exactly who repeats and when) are
- * still deferred — this function only needs to return the right overs
- * total, which is unambiguous regardless of the rotation details. Any
- * squad size outside {8, 9, 10} still throws rather than silently
- * guessing.
+ * Supported squad sizes: 8–12 players per team (16–24 overs).
  */
 function totalOversForSquadSize(squadSize) {
-  if (squadSize === 8) return 16;
-  if (squadSize === 9 || squadSize === 10) return 20;
-  throw new ScoringRuleError(
-    `Squad size ${squadSize} isn't supported yet (only 8, 9, or 10 players per team).`
-  );
+  if (squadSize < 8 || squadSize > 12) {
+    throw new ScoringRuleError(
+      `Squad size ${squadSize} isn't supported yet (only 8–12 players per team).`
+    );
+  }
+  return Math.ceil(squadSize / 2) * 4;
 }
 
 module.exports = {

@@ -9,10 +9,10 @@ const sections = [
       </svg>
     ),
     items: [
-      'Each match has two teams of 8–10 players each (16–20 total).',
+      'Each match has two teams of 8–12 players each (up to 24 total).',
       'A team\'s batting innings is divided into pairs of batters. Each pair bats for 4 overs before the next pair comes in (default rule — may vary by tournament).',
       'When a new pair comes in, there is no restriction on who can be selected — including batters who have already batted.',
-      '8-player teams bat 16 overs (4 pairs × 4 overs); 10-player teams bat 20 overs (5 pairs × 4 overs).',
+      '8-player teams bat 16 overs (4 pairs × 4 overs); 10-player teams bat 20 overs (5 pairs × 4 overs); 12-player teams bat 24 overs (6 pairs × 4 overs). Odd-sized squads (9 or 11) use the same over count as the next even size.',
     ],
   },
   {

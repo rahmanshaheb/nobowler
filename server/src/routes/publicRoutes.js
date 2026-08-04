@@ -269,39 +269,6 @@ router.get('/matches/:matchId', requireUuidParam('matchId'), async (req, res, ne
       [matchId]
     );
 
-    // Man of the Match — a simple impact score summed across the whole
-    // match (not per innings): runs scored + 20 per bowler-credited
-    // wicket + 10 per fielding dismissal (catch/run-out/stumping).
-    // caught_and_bowled is deliberately excluded from the fielding side
-    // of this since it's the same dismissal already scored via the
-    // bowler's wicket credit above — counting it again would double up.
-    const impactScores = new Map();
-    const addImpact = (playerId, name, delta) => {
-      const entry = impactScores.get(playerId) || { name, score: 0 };
-      entry.score += delta;
-      impactScores.set(playerId, entry);
-    };
-    for (const b of battingStats) {
-      addImpact(b.player_id, b.display_name, Number(b.runs_scored));
-    }
-    for (const b of bowlingStats) {
-      addImpact(b.player_id, b.display_name, Number(b.bowler_credited_wickets) * 20);
-    }
-    for (const f of fieldingStats) {
-      if (['caught', 'run_out', 'stumped'].includes(f.wicket_type)) {
-        addImpact(f.fielder_id, f.fielder, Number(f.count) * 10);
-      }
-    }
-    // Only meaningful once the match is actually decided — both innings
-    // complete. Before that, the leaderboard is just whoever's ahead
-    // mid-match, which isn't a real "Man of the Match" yet.
-    let manOfMatch = null;
-    if (matchRows[0].status === 'completed') {
-      for (const entry of impactScores.values()) {
-        if (!manOfMatch || entry.score > manOfMatch.score) manOfMatch = entry;
-      }
-    }
-
     // Validate data integrity (non-blocking — errors logged but don't break scorecard)
     let validation = { isValid: true, issues: [] };
     try {
@@ -323,7 +290,6 @@ router.get('/matches/:matchId', requireUuidParam('matchId'), async (req, res, ne
       pairStats,
       zoneStats,
       fieldingStats,
-      manOfMatch,
       validation, // Include validation results for debugging
     });
   } catch (err) {
@@ -333,7 +299,7 @@ router.get('/matches/:matchId', requireUuidParam('matchId'), async (req, res, ne
 
 /**
  * GET /api/public/matches/:matchId/players/:playerId
- * Individual player detail screen ("Shafin — Man of the match — Batting / Bowling").
+ * Individual player detail screen (batting / bowling for one player in a match).
  */
 router.get('/matches/:matchId/players/:playerId', requireUuidParam('matchId', 'playerId'), async (req, res, next) => {
   const { matchId, playerId } = req.params;
@@ -386,8 +352,6 @@ router.get('/matches/:matchId/players/:playerId', requireUuidParam('matchId', 'p
       bowling: bowlingRows,
       mostRunsFromZone: zoneBreakdown[0]?.zone_hit ?? null,
       partnerships,
-      isManOfTheMatch: (await pool.query('SELECT man_of_the_match_id FROM match WHERE id = $1', [matchId]))
-        .rows[0]?.man_of_the_match_id === playerId,
     });
   } catch (err) {
     next(err);
@@ -609,7 +573,7 @@ router.get('/live-now', async (req, res, next) => {
     }));
 
     // Total overs allowed this innings, derived from the BATTING team's
-    // squad size (rule: 8 players = 16 overs, 10 players = 20 overs).
+    // squad size → ceil(squadSize / 2) pairs × 4 overs (8–12 players per team).
     // Wrapped in try/catch rather than letting an unsupported squad size
     // (e.g. 9) crash the whole endpoint — the TV/scoring UI just won't
     // show an overs-limit banner in that case, which is an acceptable

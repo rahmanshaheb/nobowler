@@ -242,7 +242,7 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
           const oversJustCompleted = Number(delivery.over_number) + 1;
           // Innings-end takes priority over everything else that could
           // also be true on this exact ball — including the 4-over pair
-          // rotation, since totalOvers (16/20) is always itself a
+          // rotation, since totalOvers (16/20/24) is always itself a
           // multiple of 4, so the innings' LAST over is always also a
           // pair-rotation boundary. There's no more batting left to do,
           // so offering a new pair/bowler pick for overs that don't

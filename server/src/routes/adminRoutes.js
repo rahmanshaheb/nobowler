@@ -8,25 +8,6 @@ const router = express.Router();
 router.use(requireAdmin);
 
 /**
- * PATCH /api/admin/matches/:matchId/man-of-the-match
- */
-router.patch('/matches/:matchId/man-of-the-match', async (req, res, next) => {
-  const { matchId } = req.params;
-  const { playerId } = req.body;
-  if (!playerId) return res.status(400).json({ error: 'playerId is required.' });
-  try {
-    const { rows } = await pool.query(
-      `UPDATE match SET man_of_the_match_id = $1 WHERE id = $2 RETURNING id, man_of_the_match_id`,
-      [playerId, matchId]
-    );
-    if (rows.length === 0) return res.status(404).json({ error: 'Match not found.' });
-    res.json(rows[0]);
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
  * DELETE /api/admin/matches/:matchId
  * Soft delete — sets deleted_at rather than removing the row, so the
  * delivery ledger and audit log survive for recovery/dispute resolution.

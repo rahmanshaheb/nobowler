@@ -99,7 +99,7 @@ router.get('/matches/:matchId', async (req, res, next) => {
 
 /**
  * GET /api/public/matches/:matchId/players/:playerId
- * Individual player detail screen ("Shafin — Man of the match — Batting / Bowling").
+ * Individual player detail screen (batting / bowling for one player in a match).
  */
 router.get('/matches/:matchId/players/:playerId', async (req, res, next) => {
   const { matchId, playerId } = req.params;
@@ -152,8 +152,6 @@ router.get('/matches/:matchId/players/:playerId', async (req, res, next) => {
       bowling: bowlingRows,
       mostRunsFromZone: zoneBreakdown[0]?.zone_hit ?? null,
       partnerships,
-      isManOfTheMatch: (await pool.query('SELECT man_of_the_match_id FROM match WHERE id = $1', [matchId]))
-        .rows[0]?.man_of_the_match_id === playerId,
     });
   } catch (err) {
     next(err);
@@ -325,7 +323,7 @@ router.get('/live-now', async (req, res, next) => {
     );
 
     // Total overs allowed this innings, derived from the BATTING team's
-    // squad size (rule: 8 players = 16 overs, 10 players = 20 overs).
+    // squad size → ceil(squadSize / 2) pairs × 4 overs (8–12 players per team).
     // Wrapped in try/catch rather than letting an unsupported squad size
     // (e.g. 9) crash the whole endpoint — the TV/scoring UI just won't
     // show an overs-limit banner in that case, which is an acceptable

@@ -76,7 +76,7 @@ export default function MatchSetupScreen({ onReady, onBack }) {
 
   function addPlayerField(team) {
     const players = team === 'A' ? teamAPlayers : teamBPlayers;
-    if (players.length >= 10) return;
+    if (players.length >= 12) return;
     const setter = team === 'A' ? setTeamAPlayers : setTeamBPlayers;
     setter((prev) => [...prev, '']);
   }
@@ -121,9 +121,8 @@ export default function MatchSetupScreen({ onReady, onBack }) {
       const bowlingRoster = team === 'A' ? teamBIds : teamAIds;
 
       if (battingRoster.length < 2) {
-        // Genuinely shouldn't happen given rule 1 (16-20 players total
-        // across both teams), but guarding explicitly rather than
-        // letting pair creation fail with a confusing API error.
+        // Genuinely shouldn't happen with a normal roster, but guarding
+        // explicitly rather than letting pair creation fail with a confusing API error.
         throw new Error('Batting team needs at least 2 players to open the innings.');
       }
 
@@ -223,7 +222,7 @@ export default function MatchSetupScreen({ onReady, onBack }) {
               )}
             </div>
           ))}
-          {(step === 'teamA' ? teamAPlayers : teamBPlayers).length < 10 && (
+          {(step === 'teamA' ? teamAPlayers : teamBPlayers).length < 12 && (
             <button className="setup-add-row" onClick={() => addPlayerField(step === 'teamA' ? 'A' : 'B')}>
               + Add player
             </button>

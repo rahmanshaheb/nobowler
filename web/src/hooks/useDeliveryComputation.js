@@ -127,13 +127,11 @@ export function getSubmitLabel({ totalRuns, isWicket, deliveryType, tappedNumber
 
 /**
  * Mirrors server/src/utils/scoringEngine.js totalOversForSquadSize().
- * Confirmed rule: 8 players/team = 16 overs, 9 or 10 players/team = 20
- * overs (a 9-player squad re-uses an existing player to fill the pair,
- * so the over count matches a full 10-player squad). Returns null only
- * for genuinely unsupported squad sizes.
+ * 8–12 players per team → ceil(squadSize / 2) pairs × 4 overs each.
+ * Odd squads (9, 11) match the next even size's over count.
+ * Returns null for unsupported squad sizes.
  */
 export function totalOversForSquadSize(squadSize) {
-  if (squadSize === 8) return 16;
-  if (squadSize === 9 || squadSize === 10) return 20;
-  return null;
+  if (squadSize < 8 || squadSize > 12) return null;
+  return Math.ceil(squadSize / 2) * 4;
 }
