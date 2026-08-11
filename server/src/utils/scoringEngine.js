@@ -42,6 +42,9 @@
 
 const VALID_ZONES = [1, 2, 4, 6];
 
+/** Wicket types credited to the bowler's Wkts tally (run_out excluded). */
+const BOWLER_CREDITED_WICKET_TYPES = ['bowled', 'caught_and_bowled', 'caught', 'three_dots', 'stumped'];
+
 class ScoringRuleError extends Error {
   constructor(message) {
     super(message);
@@ -290,4 +293,5 @@ module.exports = {
   shouldRotateStrike,
   validateBowlerOverLimit,
   totalOversForSquadSize,
+  BOWLER_CREDITED_WICKET_TYPES,
 };

@@ -53,7 +53,13 @@ function formatOversLabel(inn, maxOvers, isInningsComplete, liveOver) {
   return `${over}.${ball} overs`;
 }
 
-function getInningsBatters(roster, battingStats, teamKey, activeBatterIds) {
+function formatBowlerOvers(legalBalls) {
+  const lb = Number(legalBalls);
+  if (lb === 0) return '0.0';
+  return lb % 6 === 0 ? String(lb / 6) : `${Math.floor(lb / 6)}.${lb % 6}`;
+}
+
+function getInningsBatters(roster, battingStats, teamKey) {
   const statsById = new Map(
     battingStats.filter((b) => b.team === teamKey).map((b) => [b.player_id, b])
   );
@@ -64,18 +70,24 @@ function getInningsBatters(roster, battingStats, teamKey, activeBatterIds) {
     .map((p) => {
       const stat = statsById.get(p.id);
       const ballsFaced = Number(stat?.balls_faced ?? 0);
-      const isActive = activeBatterIds.includes(p.id);
 
-      if (ballsFaced === 0 && !isActive) {
+      if (ballsFaced === 0) {
         return { id: p.id, name: p.display_name, didNotBat: true };
       }
 
-      const runs = stat
-        ? Number(stat.runs_scored) - Number(stat.times_dismissed ?? 0) * 5
-        : 0;
-      const notOut = stat ? Number(stat.times_dismissed ?? 0) === 0 : isActive;
+      const outs = Number(stat?.times_dismissed ?? 0);
+      const runs = Number(stat?.runs_scored ?? 0) - outs * 5;
+      const notOut = outs === 0;
 
-      return { id: p.id, name: p.display_name, runs, notOut, didNotBat: false, isActive };
+      return {
+        id: p.id,
+        name: p.display_name,
+        runs,
+        balls: ballsFaced,
+        outs,
+        notOut,
+        didNotBat: false,
+      };
     });
 }
 
@@ -100,11 +112,44 @@ function getInningsBowlers(roster, bowlingStats, bowlingTeamKey, inningsId) {
       return {
         id: p.id,
         name: p.display_name,
+        overs: formatBowlerOvers(legalBalls),
         wickets: Number(stat.bowler_credited_wickets ?? 0),
         runs: Number(stat.runs_conceded ?? 0),
         didNotBowl: false,
       };
     });
+}
+
+function SummaryStatTable({ columns, rows }) {
+  return (
+    <div className="summary-stat-table">
+      <div className="summary-stat-table__head">
+        {columns.map((col) => (
+          <span
+            key={col.key}
+            className={`summary-stat-table__cell summary-stat-table__cell--${col.align}${col.key === 'name' ? ' summary-stat-table__cell--name' : ''}`}
+          >
+            {col.label}
+          </span>
+        ))}
+      </div>
+      {rows.map((row) => (
+        <div
+          className={`summary-stat-table__row${row.idle ? ' summary-stat-table__row--idle' : ''}`}
+          key={row.key}
+        >
+          {columns.map((col) => (
+            <span
+              key={col.key}
+              className={`summary-stat-table__cell summary-stat-table__cell--${col.align}${col.key === 'name' ? ' summary-stat-table__cell--name' : ''}${col.key === 'run' && row.notOut ? ' scorecard-not-out' : ''}`}
+            >
+              {row[col.key]}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function TeamInningsBlock({
@@ -113,7 +158,6 @@ function TeamInningsBlock({
   roster,
   battingStats,
   bowlingStats,
-  activeBatterIds,
   isInningsComplete,
   liveInningsId,
   liveTotals,
@@ -129,8 +173,39 @@ function TeamInningsBlock({
   const totalRuns = isLiveInnings && liveTotals ? liveTotals.runs : Number(inn.total_runs ?? 0);
   const totalWickets = isLiveInnings && liveTotals ? liveTotals.wickets : Number(inn.total_wickets ?? 0);
 
-  const batters = getInningsBatters(roster, battingStats, battingTeamKey, activeBatterIds);
+  const batters = getInningsBatters(roster, battingStats, battingTeamKey);
   const bowlers = getInningsBowlers(roster, bowlingStats, bowlingTeamKey, inn.innings_id);
+
+  const battingColumns = [
+    { key: 'name', label: 'Batsman', align: 'left' },
+    { key: 'run', label: 'Run', align: 'right' },
+    { key: 'ball', label: 'Ball', align: 'right' },
+    { key: 'out', label: 'Out', align: 'right' },
+  ];
+  const battingRows = batters.map((b) => ({
+    key: b.id,
+    idle: b.didNotBat,
+    notOut: b.notOut,
+    name: b.name,
+    run: b.didNotBat ? '—' : `${b.runs}${b.notOut ? '*' : ''}`,
+    ball: b.didNotBat ? '—' : b.balls,
+    out: b.didNotBat ? '—' : b.outs,
+  }));
+
+  const bowlingColumns = [
+    { key: 'name', label: 'Bowler', align: 'left' },
+    { key: 'overs', label: 'Overs', align: 'right' },
+    { key: 'runs', label: 'Runs', align: 'right' },
+    { key: 'wkt', label: 'Wkt', align: 'right' },
+  ];
+  const bowlingRows = bowlers.map((b) => ({
+    key: b.id,
+    idle: b.didNotBowl,
+    name: b.name,
+    overs: b.didNotBowl ? '—' : b.overs,
+    runs: b.didNotBowl ? '—' : b.runs,
+    wkt: b.didNotBowl ? '—' : b.wickets,
+  }));
 
   return (
     <section className="summary-innings-card">
@@ -155,35 +230,14 @@ function TeamInningsBlock({
       <div className="summary-innings-card__cols">
         <div className="summary-col">
           <h3 className="scorecard-section-label scorecard-section-label--batting">Batting</h3>
-          <ul className="summary-player-list">
-            {batters.map((b) => (
-              <li className={`summary-player-row${b.didNotBat ? ' summary-player-row--idle' : ''}`} key={b.id}>
-                <span className="summary-player-row__name">
-                  {b.isActive && <span className="summary-player-row__live">●</span>}
-                  {b.name}
-                </span>
-                <span className={`summary-player-row__value${b.notOut && !b.didNotBat ? ' scorecard-not-out' : ''}`}>
-                  {b.didNotBat ? '—' : `${b.runs}${b.notOut ? '*' : ''}`}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <SummaryStatTable columns={battingColumns} rows={battingRows} />
         </div>
 
         <div className="summary-col">
           <h3 className="scorecard-section-label scorecard-section-label--bowling">
             Bowling — {bowlingTeamName}
           </h3>
-          <ul className="summary-player-list">
-            {bowlers.map((b) => (
-              <li className={`summary-player-row${b.didNotBowl ? ' summary-player-row--idle' : ''}`} key={b.id}>
-                <span className="summary-player-row__name">{b.name}</span>
-                <span className="summary-player-row__value">
-                  {b.didNotBowl ? '—' : `${b.wickets}-${b.runs}`}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <SummaryStatTable columns={bowlingColumns} rows={bowlingRows} />
         </div>
       </div>
     </section>
@@ -193,7 +247,6 @@ function TeamInningsBlock({
 export default function ScoreSummaryScreen({ matchId, onBack }) {
   const [data, setData] = useState(null);
   const [live, setLive] = useState(null);
-  const [activeBatterIds, setActiveBatterIds] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -248,27 +301,6 @@ export default function ScoreSummaryScreen({ matchId, onBack }) {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [matchId, data?.match?.status]);
-
-  useEffect(() => {
-    if (!matchId || data?.match?.status !== 'live') {
-      setActiveBatterIds([]);
-      return;
-    }
-
-    let cancelled = false;
-
-    api.get(`/matches/${matchId}/rehydrate`)
-      .then((r) => {
-        if (!cancelled && r.strikerId) {
-          setActiveBatterIds([r.strikerId, r.nonStrikerId].filter(Boolean));
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setActiveBatterIds([]);
-      });
-
-    return () => { cancelled = true; };
   }, [matchId, data?.match?.status]);
 
   function handleBack() {
@@ -404,7 +436,6 @@ export default function ScoreSummaryScreen({ matchId, onBack }) {
               roster={roster}
               battingStats={battingStats}
               bowlingStats={bowlingStats}
-              activeBatterIds={activeBatterIds}
               isInningsComplete={
                 match.status === 'completed' ||
                 (inn.innings_number === 1 && sortedInnings.some((i) => i.innings_number === 2))

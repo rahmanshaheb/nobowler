@@ -265,12 +265,9 @@ function TeamScorecard({ teamLabel, teamKey, battingStats, bowlingStats, pairSta
                 <div className="scorecard-player-card__stats">
                   <Stat label="Overs" value={oversDisplay} />
                   <Stat label="Runs" value={p.runs_conceded} />
-                  {/* bowler_credited_wickets (bowled/caught_and_bowled
-                      only) is the figure that belongs on a bowling
-                      line, NOT total_wickets_in_spell — a run-out or
-                      stumping during this bowler's over is a real
-                      wicket but isn't conventionally credited to the
-                      bowler's own tally. */}
+                  {/* bowler_credited_wickets counts bowled, caught,
+                      caught_and_bowled, stumped, and three_dots —
+                      run outs are excluded and shown as fielding stats. */}
                   <Stat label="Wkts" value={p.bowler_credited_wickets} />
                 </div>
               </div>

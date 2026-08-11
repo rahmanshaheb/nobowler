@@ -114,9 +114,11 @@
   background: var(--color-navy-900);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-body);
   overflow: hidden;
-  padding: 1vw 4vw 0;
+  padding: 2vh 5vw 3vh;
   box-sizing: border-box;
 }
 
@@ -142,26 +144,30 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
+  align-items: center;
   overflow: hidden;
   min-height: 0;
+  width: 100%;
+  max-width: 1600px;
 }
 
-/* ── Two-column layout (landscape) ─────────────────────────────── */
+/* ── Main score layout (landscape) ─────────────────────────────── */
 .tv-layout {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) min(32vw, 400px);
+  grid-template-columns: 1fr;
   grid-template-rows: auto minmax(0, 1fr);
-  column-gap: 3vw;
-  row-gap: 1.2vw;
-  align-items: start;
+  row-gap: clamp(12px, 2vh, 28px);
+  align-content: center;
+  justify-items: center;
   min-height: 0;
   width: 100%;
 }
 
 .tv-layout__innings {
   grid-column: 1 / -1;
+  text-align: center;
 }
 
 .tv-left {
@@ -169,145 +175,35 @@
   grid-row: 2;
   min-width: 0;
   min-height: 0;
+  width: 100%;
   height: 100%;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
-  align-content: start;
-  gap: clamp(8px, 1.2vh, 20px);
+  align-content: center;
+  justify-items: center;
+  gap: clamp(16px, 2.5vh, 36px);
   overflow: hidden;
+  text-align: center;
 }
 
-.tv-right {
-  grid-column: 2;
-  grid-row: 2;
-  min-width: 0;
-  min-height: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: stretch;
-  gap: clamp(12px, 2vh, 28px);
-  padding-left: 3vw;
-  border-left: 2px solid var(--color-border);
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-/* Right-column panels */
-.tv-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6vw;
-}
-
-.tv-panel__label {
-  font-family: var(--font-body);
-  font-size: 2vw;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-yellow);
-}
-
-.tv-panel__sub-label {
-  font-family: var(--font-body);
-  font-size: 1.4vw;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-  margin-top: 1vw;
-}
-
-.tv-panel__name {
-  font-family: var(--font-display);
-  font-size: clamp(18px, 2.8vw, 42px);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  line-height: 1.15;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
-.tv-panel__figures {
-  font-family: var(--font-display);
-  font-size: clamp(22px, 3.2vw, 48px);
-  font-weight: 800;
-  color: var(--color-mint);
-  line-height: 1.1;
-}
-
-.tv-panel__empty {
-  font-size: 2vw;
-  color: var(--color-text-secondary);
-  font-style: italic;
-}
-
-.tv-pair-current__number {
-  font-family: var(--font-display);
-  font-size: 2.4vw;
-  font-weight: 700;
-  color: var(--color-yellow);
-}
-
-.tv-pair-current__batters {
-  font-family: var(--font-body);
-  font-size: 2vw;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  line-height: 1.3;
-}
-
-.tv-pair-current__runs {
-  font-family: var(--font-display);
-  font-size: clamp(28px, 4.5vw, 72px);
-  font-weight: 800;
-  color: var(--color-mint);
-  line-height: 1.1;
-}
-
-.tv-panel--bowler,
-.tv-panel--pair {
-  flex-shrink: 0;
-}
-
-.tv-panel--pair {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.tv-panel--pair .tv-pairs-ticker {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5vw;
-  max-width: 100%;
-  overflow-x: visible;
-  overflow-y: auto;
-  max-height: 28vh;
-}
-
-.tv-panel--pair .tv-pairs-ticker__item {
-  font-size: 1.8vw;
-}
-
-/* Row 1: Innings — full width above both columns */
+/* Row 1: Innings — full width above score area */
 .tv-innings-label {
   color: var(--color-yellow);
-  font-size: clamp(28px, 3.5vw, 56px);
+  font-size: clamp(32px, 4.5vw, 72px);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1;
 }
 
-/* ── Left column: score block ─────────────────────────────────── */
+/* ── Score block ──────────────────────────────────────────────── */
 .tv-score-block {
   width: 100%;
   min-width: 0;
   max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .tv-score-block__main {
@@ -320,6 +216,7 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: baseline;
+  justify-content: center;
   max-width: 100%;
 }
 
@@ -328,7 +225,7 @@
   color: var(--color-yellow);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 300px;
+  font-size: clamp(140px, 22vmin, 340px);
   line-height: 1;
   white-space: nowrap;
 }
@@ -354,50 +251,74 @@
   font-weight: 800;
 }
 
-/* Chase meta — small single line, wraps cleanly if narrow */
+/* Chase meta — large TV-readable stats below the score */
 .tv-chase-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: clamp(12px, 2vw, 40px);
   width: 100%;
   max-width: 100%;
-  margin-top: clamp(6px, 0.8vh, 14px);
+  margin-top: clamp(8px, 1.5vh, 24px);
   flex-shrink: 0;
 }
 
-.tv-chase-info__line {
-  display: flex;
+.tv-chase-info__item {
+  display: inline-flex;
+  align-items: baseline;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35em 0.65em;
-  max-width: 100%;
-  line-height: 1.35;
-  font-family: var(--font-body);
-  font-size: clamp(13px, 1.6vw, 22px);
-  font-weight: 600;
+  gap: 0.3em 0.45em;
+  justify-content: center;
 }
 
-.tv-chase-info__required {
+.tv-chase-info__number {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(56px, 9vw, 140px);
+  line-height: 1;
   color: var(--color-mint);
   white-space: nowrap;
 }
 
-.tv-chase-info__sep {
-  color: var(--color-text-secondary);
-  font-weight: 500;
-  flex-shrink: 0;
-}
-
-.tv-chase-info__balls {
-  color: var(--color-text-secondary);
+.tv-chase-info__text {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(28px, 3.8vw, 64px);
+  line-height: 1.1;
+  color: var(--color-text-primary);
   white-space: nowrap;
 }
 
-.tv-chase-info--portrait {
-  text-align: center;
-  margin-top: clamp(8px, 1.5vh, 16px);
+.tv-chase-info__text--solo {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 6vw, 96px);
+  color: var(--color-mint);
 }
 
-.tv-chase-info--portrait .tv-chase-info__line {
-  justify-content: center;
-  font-size: clamp(12px, 3.2vw, 20px);
+.tv-chase-info__sep {
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(40px, 6vw, 96px);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.tv-chase-info--portrait {
+  margin-top: clamp(12px, 2vh, 24px);
+}
+
+.tv-chase-info--portrait .tv-chase-info__number {
+  font-size: clamp(48px, 14vw, 120px);
+}
+
+.tv-chase-info--portrait .tv-chase-info__text {
+  font-size: clamp(24px, 6vw, 56px);
+}
+
+.tv-chase-info--portrait .tv-chase-info__sep {
+  font-size: clamp(32px, 10vw, 80px);
 }
 
 /* Over row */
@@ -405,6 +326,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
+  justify-content: center;
   gap: 0.5em 0.75em;
   max-width: 100%;
   flex-shrink: 0;
@@ -415,7 +337,7 @@
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  font-size: clamp(32px, 5vw, 80px);
+  font-size: clamp(36px, 5.5vw, 96px);
   line-height: 1;
 }
 
@@ -423,7 +345,7 @@
   color: var(--color-mint);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(32px, 5vw, 80px);
+  font-size: clamp(36px, 5.5vw, 96px);
   line-height: 1;
 }
 
@@ -445,6 +367,8 @@
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  display: flex;
+  justify-content: center;
   /* Reserve headroom for WD/NB/WKT tabs above the circles */
   padding-top: clamp(28px, 3.5vw, 52px);
   padding-bottom: clamp(4px, 0.8vw, 12px);
@@ -485,32 +409,6 @@
 .tv-ball-history .ball-dot--placeholder {
   width: 7.5vw;
   height: 7.5vw;
-}
-
-.tv-pairs-ticker {
-  display: flex;
-  gap: 1.2vw;
-  overflow-x: auto;
-  scrollbar-width: none;
-  max-width: 90vw;
-}
-
-.tv-pairs-ticker::-webkit-scrollbar { display: none; }
-
-.tv-pairs-ticker__item {
-  flex-shrink: 0;
-  color: var(--color-text-secondary);
-  font-size: 1.4vw;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.tv-pairs-ticker__item strong {
-  font-weight: 800;
-}
-
-.tv-pairs-ticker__item--current {
-  color: var(--color-yellow);
 }
 
 /* ── Portrait layout ─────────────────────────────────────────── */
@@ -558,65 +456,6 @@
     overflow: hidden;
   }
 
-  .tv-portrait-side {
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: row;
-    gap: 4vw;
-    width: 100%;
-    padding: 2vh 5vw 0;
-    border-top: 2px solid var(--color-border);
-    margin-top: 2vh;
-  }
-
-  .tv-portrait-side .tv-panel {
-    flex: 1;
-    min-width: 0;
-    text-align: center;
-    align-items: center;
-  }
-
-  .tv-portrait-side .tv-panel__label {
-    font-size: 3.5vw;
-  }
-
-  .tv-portrait-side .tv-panel__name {
-    font-size: 5vw;
-  }
-
-  .tv-portrait-side .tv-panel__figures {
-    font-size: 6vw;
-  }
-
-  .tv-portrait-side .tv-pair-current__number {
-    font-size: 4vw;
-  }
-
-  .tv-portrait-side .tv-pair-current__batters {
-    font-size: 3.8vw;
-  }
-
-  .tv-portrait-side .tv-pair-current__runs {
-    font-size: 14vw;
-  }
-
-  .tv-portrait-side .tv-panel__sub-label {
-    font-size: 3vw;
-    margin-top: 1vh;
-  }
-
-  .tv-pairs-ticker--portrait {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 100%;
-    gap: 2vw;
-  }
-
-  .tv-pairs-ticker--portrait .tv-pairs-ticker__item {
-    font-size: 4vw;
-  }
-
   /* TV-sized fixed pixel values overflow a phone's narrow width —
      scale down to fit, "OUT ☝️" in particular being much wider than
      a single boundary digit. */
@@ -638,7 +477,7 @@
 
   .tv-portrait-label {
     font-family: var(--font-body);
-    font-size: 3.5vw;
+    font-size: clamp(20px, 4vw, 48px);
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -655,7 +494,7 @@
 
   .tv-portrait-row--innings .tv-portrait-label {
     color: var(--color-yellow);
-    font-size: 7vw;
+    font-size: clamp(32px, 7vw, 72px);
     margin-bottom: 0;
   }
 
@@ -704,17 +543,17 @@
 
   .tv-portrait-over {
     font-family: var(--font-display);
-    font-size: 10vw;
-    font-weight: 700;
-    color: var(--color-text-primary);
+    font-size: clamp(36px, 10vw, 96px);
+    font-weight: 800;
+    color: var(--color-mint);
     line-height: 1;
   }
 
   .tv-portrait-run-this-over {
     font-family: var(--font-display);
-    font-size: 14vw;
-    font-weight: 700;
-    color: var(--color-text-primary);
+    font-size: clamp(48px, 14vw, 120px);
+    font-weight: 800;
+    color: var(--color-mint);
     line-height: 1;
   }
 
@@ -735,7 +574,7 @@
   }
 
   .tv-portrait-score {
-    font-size: 300px;
+    font-size: clamp(120px, 28vmin, 300px);
   }
 
   .tv-portrait-score-line {

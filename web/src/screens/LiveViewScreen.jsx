@@ -13,17 +13,6 @@ function getBallsRemaining(liveData) {
   return Math.max(0, totalLegalBalls - legalBallsUsed);
 }
 
-function formatRunsRequired(runsRequired) {
-  if (runsRequired == null) return null;
-  if (runsRequired <= 0) return 'Target reached';
-  return `${runsRequired} run${runsRequired === 1 ? '' : 's'} required`;
-}
-
-function formatBallsLeft(ballsLeft) {
-  if (ballsLeft == null) return null;
-  return `${ballsLeft} ball${ballsLeft === 1 ? '' : 's'} left`;
-}
-
 function MainScore({ liveData, isChasing, className = 'tv-score' }) {
   if (isChasing) {
     return (
@@ -49,20 +38,33 @@ function ChaseInfo({ liveData, portrait = false }) {
 
   const runsRequired = liveData.runsRequired;
   const ballsLeft = getBallsRemaining(liveData);
-  const requiredText = formatRunsRequired(runsRequired);
-  const ballsText = ballsLeft != null ? formatBallsLeft(ballsLeft) : null;
+  const targetReached = runsRequired != null && runsRequired <= 0;
 
   return (
     <div className={`tv-chase-info${portrait ? ' tv-chase-info--portrait' : ''}`}>
-      <div className="tv-chase-info__line">
-        <span className="tv-chase-info__required">{requiredText}</span>
-        {ballsText && (
+      <div className="tv-chase-info__item">
+        {targetReached ? (
+          <span className="tv-chase-info__text tv-chase-info__text--solo">Target reached</span>
+        ) : (
           <>
-            <span className="tv-chase-info__sep">·</span>
-            <span className="tv-chase-info__balls">{ballsText}</span>
+            <span className="tv-chase-info__number">{runsRequired}</span>
+            <span className="tv-chase-info__text">
+              run{runsRequired === 1 ? '' : 's'} required
+            </span>
           </>
         )}
       </div>
+      {ballsLeft != null && (
+        <>
+          <span className="tv-chase-info__sep" aria-hidden="true">·</span>
+          <div className="tv-chase-info__item">
+            <span className="tv-chase-info__number">{ballsLeft}</span>
+            <span className="tv-chase-info__text">
+              ball{ballsLeft === 1 ? '' : 's'} left
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -253,7 +255,7 @@ export default function LiveViewScreen({ matchId = null }) {
 
       <div className="tv-card">
 
-        {/* Two-column layout: left = score/overs/balls, right = bowler/pairs */}
+        {/* Score, over, and ball history */}
         <div className="tv-layout tv-landscape-only">
           <div className="tv-layout__innings">
             <div className="tv-innings-label">INNINGS {liveData.inningsNumber}</div>
@@ -280,20 +282,9 @@ export default function LiveViewScreen({ matchId = null }) {
               </div>
             </div>
           </div>
-
-          <div className="tv-right">
-            <BowlerStatePanel name={liveData.bowlerName} figures={liveData.bowlerFigures} />
-            <PairStatePanel
-              pairs={liveData.allPairs}
-              currentPairNumber={liveData.currentPairNumber}
-              pairTotalRuns={liveData.pairTotalRuns}
-              strikerName={liveData.strikerName}
-              nonStrikerName={liveData.nonStrikerName}
-            />
-          </div>
         </div>
 
-        {/* Portrait — score/overs/balls on top, bowler/pairs below */}
+        {/* Portrait — score, overs, and ball history */}
         <div className="tv-portrait-only">
 
           <div className="tv-portrait-main">
@@ -328,107 +319,9 @@ export default function LiveViewScreen({ matchId = null }) {
             </div>
           </div>
 
-          <div className="tv-portrait-side">
-            <BowlerStatePanel name={liveData.bowlerName} figures={liveData.bowlerFigures} portrait />
-            <PairStatePanel
-              pairs={liveData.allPairs}
-              currentPairNumber={liveData.currentPairNumber}
-              pairTotalRuns={liveData.pairTotalRuns}
-              strikerName={liveData.strikerName}
-              nonStrikerName={liveData.nonStrikerName}
-              portrait
-            />
-          </div>
-
         </div>
 
       </div>
-    </div>
-  );
-}
-
-// BowlerStatePanel — current bowler name + innings figures (right column).
-function BowlerStatePanel({ name, figures, portrait = false }) {
-  return (
-    <div className={`tv-panel tv-panel--bowler${portrait ? ' tv-panel--portrait' : ''}`}>
-      <div className="tv-panel__label">Bowler</div>
-      {name ? (
-        <>
-          <div className="tv-panel__name">{name}</div>
-          <div className="tv-panel__figures">
-            {figures?.oversBowled ?? '0.0'}-{figures?.runsConceded ?? 0}-{figures?.wickets ?? 0}
-          </div>
-        </>
-      ) : (
-        <div className="tv-panel__empty">Not selected</div>
-      )}
-    </div>
-  );
-}
-
-// PairStatePanel — current pair batters + total, plus all pairs ticker.
-function PairStatePanel({
-  pairs,
-  currentPairNumber,
-  pairTotalRuns,
-  strikerName,
-  nonStrikerName,
-  portrait = false,
-}) {
-  return (
-    <div className={`tv-panel tv-panel--pair${portrait ? ' tv-panel--portrait' : ''}`}>
-      <div className="tv-panel__label">Pair</div>
-      {currentPairNumber != null ? (
-        <>
-          <div className="tv-pair-current__number">Pair {currentPairNumber}</div>
-          {(strikerName || nonStrikerName) && (
-            <div className="tv-pair-current__batters">
-              {strikerName ?? '—'} & {nonStrikerName ?? '—'}
-            </div>
-          )}
-          <div className="tv-pair-current__runs">{pairTotalRuns ?? 0}</div>
-        </>
-      ) : (
-        <div className="tv-panel__empty">—</div>
-      )}
-      <div className="tv-panel__sub-label">All pairs</div>
-      <PairsTicker pairs={pairs} currentPairNumber={currentPairNumber} portrait={portrait} />
-    </div>
-  );
-}
-
-// BowlerLine — kept for any legacy use; prefer BowlerStatePanel on live view.
-function BowlerLine({ name, figures }) {
-  if (!name) return null;
-  return (
-    <div className="tv-bowler-line">
-      <span className="tv-bowler-line__name">{name}</span>
-      <span className="tv-bowler-line__figures">
-        {figures?.oversBowled ?? '0.0'}-{figures?.runsConceded ?? 0}-{figures?.wickets ?? 0}
-      </span>
-    </div>
-  );
-}
-
-// PairsTicker — every batting pair's combined total so far this innings,
-// pair number only (no player names — see design decision), all on one
-// scrollable line with the current pair picked out in yellow.
-function PairsTicker({ pairs, currentPairNumber, portrait = false }) {
-  if (!pairs?.length) return <div className="tv-panel__empty">No pairs yet</div>;
-  return (
-    <div className={`tv-pairs-ticker${portrait ? ' tv-pairs-ticker--portrait' : ''}`}>
-      {pairs.map((p) => (
-        <span
-          key={p.pairNumber}
-          className={
-            p.pairNumber === currentPairNumber
-              ? 'tv-pairs-ticker__item tv-pairs-ticker__item--current'
-              : 'tv-pairs-ticker__item'
-          }
-        >
-          P{p.pairNumber} <strong>{p.totalRuns}</strong>
-        </span>
-      ))}
     </div>
   );
 }

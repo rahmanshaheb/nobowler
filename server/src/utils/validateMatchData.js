@@ -1,10 +1,15 @@
 /**
  * Validates that match stats have proper correlation:
- * - Total wickets = sum of individual dismissals = sum of bowler wickets
+ * - Total wickets = sum of individual dismissals
+ * - Sum of bowler-credited wickets = dismissals minus run outs
  * - All dismissals have valid bowling_spell_id (not NULL)
  *
  * Returns { isValid, issues: [] }
  */
+const { BOWLER_CREDITED_WICKET_TYPES } = require('./scoringEngine');
+
+const BOWLER_CREDIT_SQL_LIST = BOWLER_CREDITED_WICKET_TYPES.map((t) => `'${t}'`).join(',');
+
 async function validateMatchData(matchId, pool) {
   const issues = [];
 
@@ -32,6 +37,15 @@ async function validateMatchData(matchId, pool) {
       [inning.id]
     );
     const linkedCount = Number(linkedDismissals[0].count);
+
+    // Dismissals that should credit the bowler (all types except run_out).
+    const { rows: creditableDismissals } = await pool.query(
+      `SELECT COUNT(*) AS count FROM delivery
+       WHERE innings_id = $1 AND is_wicket = true AND is_undone = false
+         AND wicket_type IN (${BOWLER_CREDIT_SQL_LIST})`,
+      [inning.id]
+    );
+    const creditableTotal = Number(creditableDismissals[0].count);
 
     // Sum of bowler-credited wickets from the aggregated view (not bowling_spell table).
     const { rows: bowlerWickets } = await pool.query(
@@ -62,11 +76,11 @@ async function validateMatchData(matchId, pool) {
       });
     }
 
-    if (bowlerTotal !== inningsTotal) {
+    if (bowlerTotal !== creditableTotal) {
       issues.push({
         innings: inning.innings_number,
         type: 'BOWLER_CREDIT_MISMATCH',
-        message: `Innings ${inning.innings_number}: Bowler wickets (${bowlerTotal}) ≠ Total wickets (${inningsTotal})`,
+        message: `Innings ${inning.innings_number}: Bowler wickets (${bowlerTotal}) ≠ Creditable dismissals (${creditableTotal})`,
       });
     }
   }

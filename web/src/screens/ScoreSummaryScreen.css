@@ -292,59 +292,82 @@
   margin-top: 0;
 }
 
-/* ── Player rows ────────────────────────────────────────────── */
+/* ── Stat tables (batting / bowling) ────────────────────────── */
 
-.summary-player-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.summary-stat-table {
+  width: 100%;
 }
 
-.summary-player-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+.summary-stat-table__head,
+.summary-stat-table__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(36px, 0.55fr));
   gap: var(--space-2);
+  align-items: center;
   padding: 6px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  font-size: 15px;
 }
 
-.summary-player-row:last-child {
+.summary-stat-table__head {
+  padding-top: 0;
+  padding-bottom: 8px;
+  border-bottom-color: rgba(100, 139, 195, 0.35);
+}
+
+.summary-stat-table__row:last-child {
   border-bottom: none;
+  padding-bottom: 0;
 }
 
-.summary-player-row--idle {
+.summary-stat-table__row--idle {
   color: var(--color-text-secondary);
 }
 
-.summary-player-row__name {
+.summary-stat-table__cell {
   font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+
+.summary-stat-table__head .summary-stat-table__cell {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.summary-stat-table__cell--name {
   font-size: 15px;
   font-weight: 600;
-  flex: 1;
-  min-width: 0;
+  letter-spacing: normal;
+  text-transform: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.summary-player-row__live {
-  color: var(--color-mint);
-  margin-right: 4px;
+.summary-stat-table__head .summary-stat-table__cell--name {
   font-size: 11px;
+  text-transform: uppercase;
 }
 
-.summary-player-row__value {
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
+.summary-stat-table__cell--left {
+  text-align: left;
+}
+
+.summary-stat-table__cell--right {
   text-align: right;
 }
 
-.summary-player-row--idle .summary-player-row__value {
+.summary-stat-table__row .summary-stat-table__cell--right {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.summary-stat-table__row--idle .summary-stat-table__cell--right {
   font-weight: 500;
 }
 
