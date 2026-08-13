@@ -280,8 +280,32 @@
   gap: 0;
 }
 
+.summary-innings-card__cols--triple {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-innings-card__cols--triple .summary-stat-table__head,
+.summary-innings-card__cols--triple .summary-stat-table__row {
+  grid-template-columns: minmax(0, 1.15fr) repeat(3, minmax(28px, 0.42fr));
+  gap: 6px;
+}
+
+.summary-innings-card__cols--triple .summary-stat-table__cell--name {
+  font-size: 13px;
+}
+
+.summary-innings-card__pairs {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-bottom: 1px solid rgba(100, 139, 195, 0.25);
+}
+
+.summary-innings-card__pairs .scorecard-section-label {
+  margin-top: 0;
+}
+
 .summary-col {
   padding: var(--space-3) var(--space-4) var(--space-4);
+  min-width: 0;
 }
 
 .summary-col + .summary-col {
@@ -290,6 +314,11 @@
 
 .summary-col .scorecard-section-label {
   margin-top: 0;
+}
+
+.summary-col .scorecard-empty {
+  margin: 0;
+  padding: var(--space-2) 0 0;
 }
 
 /* ── Stat tables (batting / bowling) ────────────────────────── */
@@ -306,6 +335,11 @@
   align-items: center;
   padding: 6px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.summary-stat-table--pairs .summary-stat-table__head,
+.summary-stat-table--pairs .summary-stat-table__row {
+  grid-template-columns: minmax(0, 1fr) minmax(48px, 0.35fr);
 }
 
 .summary-stat-table__head {
@@ -371,6 +405,10 @@
   font-weight: 500;
 }
 
+.summary-stat-table__cell--negative {
+  color: var(--color-coral);
+}
+
 /* ── Sponsor footer ─────────────────────────────────────────── */
 
 .summary-sponsor {
@@ -396,8 +434,15 @@
 
 /* ── Mobile ─────────────────────────────────────────────────── */
 
+@media (max-width: 768px) {
+  .summary-innings-card__cols--triple {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 480px) {
-  .summary-innings-card__cols {
+  .summary-innings-card__cols,
+  .summary-innings-card__cols--triple {
     grid-template-columns: 1fr;
   }
 

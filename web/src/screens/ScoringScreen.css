@@ -773,6 +773,7 @@
 .scorecard-section-label--pairs   { color: var(--color-mint); }
 .scorecard-section-label--zones   { color: var(--color-mint); }
 .scorecard-section-label--bowling { color: var(--color-coral); }
+.scorecard-section-label--fielding { color: var(--color-yellow); }
 
 
 .scorecard-empty {

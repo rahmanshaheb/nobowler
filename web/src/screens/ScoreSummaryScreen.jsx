@@ -121,9 +121,71 @@ function getInningsBowlers(roster, bowlingStats, bowlingTeamKey, inningsId) {
     });
 }
 
-function SummaryStatTable({ columns, rows }) {
+function getInningsPairs(pairStats, inningsNumber, battingTeamKey) {
+  const byPair = new Map();
+
+  (pairStats || [])
+    .filter(
+      (p) =>
+        p.batting_team === battingTeamKey &&
+        Number(p.innings_number) === Number(inningsNumber)
+    )
+    .forEach((p) => {
+      const hasActivity =
+        Number(p.legal_balls_faced ?? 0) > 0 || Number(p.pair_total_runs ?? 0) !== 0;
+      if (!hasActivity) return;
+
+      const pairNumber = Number(p.pair_number);
+      if (!byPair.has(pairNumber)) {
+        byPair.set(pairNumber, {
+          pairNumber,
+          name: `${p.batter_1_name} & ${p.batter_2_name}`,
+          runs: 0,
+        });
+      }
+
+      byPair.get(pairNumber).runs += Number(p.pair_total_runs ?? 0);
+    });
+
+  return [...byPair.values()].sort((a, b) => a.pairNumber - b.pairNumber);
+}
+
+function getInningsFielders(fieldingStats, inningsNumber) {
+  const byFielder = new Map();
+
+  (fieldingStats || [])
+    .filter((f) => Number(f.innings_number) === Number(inningsNumber))
+    .forEach(({ fielder, fielder_id, wicket_type, count }) => {
+      const key = fielder_id || fielder;
+      if (!byFielder.has(key)) {
+        byFielder.set(key, {
+          id: fielder_id || fielder,
+          name: fielder,
+          catches: 0,
+          runOuts: 0,
+          stumpings: 0,
+        });
+      }
+
+      const row = byFielder.get(key);
+      const n = Number(count);
+      if (wicket_type === 'caught' || wicket_type === 'caught_and_bowled') row.catches += n;
+      else if (wicket_type === 'run_out') row.runOuts += n;
+      else if (wicket_type === 'stumped') row.stumpings += n;
+    });
+
+  return [...byFielder.values()]
+    .filter((f) => f.catches + f.runOuts + f.stumpings > 0)
+    .sort((a, b) => {
+      const totalA = a.catches + a.runOuts + a.stumpings;
+      const totalB = b.catches + b.runOuts + b.stumpings;
+      return totalB - totalA || a.name.localeCompare(b.name);
+    });
+}
+
+function SummaryStatTable({ columns, rows, variant = 'default' }) {
   return (
-    <div className="summary-stat-table">
+    <div className={`summary-stat-table summary-stat-table--${variant}`}>
       <div className="summary-stat-table__head">
         {columns.map((col) => (
           <span
@@ -142,7 +204,7 @@ function SummaryStatTable({ columns, rows }) {
           {columns.map((col) => (
             <span
               key={col.key}
-              className={`summary-stat-table__cell summary-stat-table__cell--${col.align}${col.key === 'name' ? ' summary-stat-table__cell--name' : ''}${col.key === 'run' && row.notOut ? ' scorecard-not-out' : ''}`}
+              className={`summary-stat-table__cell summary-stat-table__cell--${col.align}${col.key === 'name' ? ' summary-stat-table__cell--name' : ''}${col.key === 'run' && row.notOut ? ' scorecard-not-out' : ''}${col.key === 'run' && row.negative ? ' summary-stat-table__cell--negative' : ''}`}
             >
               {row[col.key]}
             </span>
@@ -159,6 +221,8 @@ function TeamInningsBlock({
   roster,
   battingStats,
   bowlingStats,
+  fieldingStats,
+  pairStats,
   isInningsComplete,
   liveInningsId,
   liveTotals,
@@ -174,8 +238,21 @@ function TeamInningsBlock({
   const totalRuns = isLiveInnings && liveTotals ? liveTotals.runs : Number(inn.total_runs ?? 0);
   const totalWickets = isLiveInnings && liveTotals ? liveTotals.wickets : Number(inn.total_wickets ?? 0);
 
+  const pairs = getInningsPairs(pairStats, inn.innings_number, battingTeamKey);
   const batters = getInningsBatters(roster, battingStats, battingTeamKey);
   const bowlers = getInningsBowlers(roster, bowlingStats, bowlingTeamKey, inn.innings_id);
+  const fielders = getInningsFielders(fieldingStats, inn.innings_number);
+
+  const pairColumns = [
+    { key: 'name', label: 'Pair', align: 'left' },
+    { key: 'run', label: 'Run', align: 'right' },
+  ];
+  const pairRows = pairs.map((p) => ({
+    key: p.pairNumber,
+    name: `Pair ${p.pairNumber} — ${p.name}`,
+    run: p.runs,
+    negative: p.runs < 0,
+  }));
 
   const battingColumns = [
     { key: 'name', label: 'Batsman', align: 'left' },
@@ -208,6 +285,21 @@ function TeamInningsBlock({
     wkt: b.didNotBowl ? '—' : b.wickets,
   }));
 
+  const fieldingColumns = [
+    { key: 'name', label: 'Fielder', align: 'left' },
+    { key: 'ct', label: 'Ct', align: 'right' },
+    { key: 'ro', label: 'RO', align: 'right' },
+    { key: 'st', label: 'St', align: 'right' },
+  ];
+  const fieldingRows = fielders.map((f) => ({
+    key: f.id,
+    idle: false,
+    name: f.name,
+    ct: f.catches,
+    ro: f.runOuts,
+    st: f.stumpings,
+  }));
+
   return (
     <section className="summary-innings-card">
       <div className="summary-innings-card__head">
@@ -228,7 +320,14 @@ function TeamInningsBlock({
         </div>
       </div>
 
-      <div className="summary-innings-card__cols">
+      {pairRows.length > 0 && (
+        <div className="summary-innings-card__pairs">
+          <h3 className="scorecard-section-label scorecard-section-label--pairs">Pairs</h3>
+          <SummaryStatTable columns={pairColumns} rows={pairRows} variant="pairs" />
+        </div>
+      )}
+
+      <div className="summary-innings-card__cols summary-innings-card__cols--triple">
         <div className="summary-col">
           <h3 className="scorecard-section-label scorecard-section-label--batting">Batting</h3>
           <SummaryStatTable columns={battingColumns} rows={battingRows} />
@@ -239,6 +338,17 @@ function TeamInningsBlock({
             Bowling — {bowlingTeamName}
           </h3>
           <SummaryStatTable columns={bowlingColumns} rows={bowlingRows} />
+        </div>
+
+        <div className="summary-col">
+          <h3 className="scorecard-section-label scorecard-section-label--fielding">
+            Fielding — {bowlingTeamName}
+          </h3>
+          {fieldingRows.length === 0 ? (
+            <p className="scorecard-empty">No fielding stats yet.</p>
+          ) : (
+            <SummaryStatTable columns={fieldingColumns} rows={fieldingRows} />
+          )}
         </div>
       </div>
     </section>
@@ -346,7 +456,7 @@ export default function ScoreSummaryScreen({ matchId, onBack }) {
     );
   }
 
-  const { match, roster = [], battingStats, bowlingStats, innings = [] } = data;
+  const { match, roster = [], battingStats, bowlingStats, fieldingStats = [], pairStats = [], innings = [] } = data;
   const sortedInnings = [...innings].sort((a, b) => a.innings_number - b.innings_number);
   const resultSummary = getResultSummary(match, sortedInnings);
   const isLive = match.status === 'live';
@@ -448,6 +558,8 @@ export default function ScoreSummaryScreen({ matchId, onBack }) {
               roster={roster}
               battingStats={battingStats}
               bowlingStats={bowlingStats}
+              fieldingStats={fieldingStats}
+              pairStats={pairStats}
               isInningsComplete={
                 match.status === 'completed' ||
                 (inn.innings_number === 1 && sortedInnings.some((i) => i.innings_number === 2))
