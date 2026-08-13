@@ -36,6 +36,12 @@ _Written July 2026, matches the current repo structure (`db/`, `server/`, `web/`
    (That second file replaces the four `add-*.js` scripts, which
    hardcode SSL settings that don't always match cleanly — this SQL
    file is the safe equivalent.)
+
+   **After the first deploy**, the backend also runs pending migrations
+   automatically on every startup (`server/db/migrate.js`), so view fixes
+   like `v_bowling_stats` bowler wicket credit are applied on Render
+   without manual psql. You only need the psql steps above for a brand-new
+   database before the first deploy.
 5. Optional: restore real match history:
    ```
    psql "<External Database URL>" -f handover/database_export_2026-07-09.sql

@@ -8,6 +8,7 @@ const scoringRoutes = require('./routes/scoringRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { ScoringRuleError } = require('./utils/scoringEngine');
+const { runMigrations } = require('../db/migrate');
 
 const app = express();
 
@@ -38,8 +39,16 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Cricket scoring API listening on port ${PORT}`);
-});
+
+runMigrations()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Cricket scoring API listening on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to run migrations:', err);
+    process.exit(1);
+  });
 
 module.exports = app;

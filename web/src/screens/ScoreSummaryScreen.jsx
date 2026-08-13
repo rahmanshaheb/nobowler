@@ -92,9 +92,10 @@ function getInningsBatters(roster, battingStats, teamKey) {
 }
 
 function getInningsBowlers(roster, bowlingStats, bowlingTeamKey, inningsId) {
+  const inningsKey = String(inningsId);
   const statsById = new Map(
     bowlingStats
-      .filter((b) => b.team === bowlingTeamKey && b.innings_id === inningsId)
+      .filter((b) => b.team === bowlingTeamKey && String(b.innings_id) === inningsKey)
       .map((b) => [b.player_id, b])
   );
 
@@ -288,8 +289,14 @@ export default function ScoreSummaryScreen({ matchId, onBack }) {
 
     async function pollLive() {
       try {
-        const result = await api.get(`/public/live-now?matchId=${matchId}`);
-        if (!cancelled) setLive(result);
+        const [liveResult, matchResult] = await Promise.all([
+          api.get(`/public/live-now?matchId=${matchId}`),
+          api.get(`/public/matches/${matchId}`),
+        ]);
+        if (!cancelled) {
+          setLive(liveResult);
+          setData(matchResult);
+        }
       } catch {
         if (!cancelled) setLive(null);
       }
@@ -413,7 +420,12 @@ export default function ScoreSummaryScreen({ matchId, onBack }) {
                   <span>{live.strikerName} & {live.nonStrikerName ?? '—'}</span>
                 )}
                 {live.bowlerName && (
-                  <span>Bowling: {live.bowlerName}</span>
+                  <span>
+                    Bowling: {live.bowlerName}
+                    {live.bowlerFigures && (
+                      <> · {live.bowlerFigures.oversBowled}-{live.bowlerFigures.runsConceded}-{live.bowlerFigures.wickets}</>
+                    )}
+                  </span>
                 )}
               </div>
             )}
