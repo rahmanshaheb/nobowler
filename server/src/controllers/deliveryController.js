@@ -1,6 +1,6 @@
 // deliveryController.js
 const { withTransaction } = require('../db/pool');
-const { computeDelivery, shouldRotateStrike, validateBowlerOverLimit, ScoringRuleError } = require('../utils/scoringEngine');
+const { computeDelivery, shouldRotateStrike, validateBowlerOverLimit, validateBowlerActivatedForNewOver, validateBowlerSpellMatch, ScoringRuleError } = require('../utils/scoringEngine');
 
 /**
  * POST /api/innings/:inningsId/deliveries
@@ -11,7 +11,7 @@ const { computeDelivery, shouldRotateStrike, validateBowlerOverLimit, ScoringRul
  *
  * Body shape:
  * {
- *   pairInningsId, bowlingSpellId, strikerId, nonStrikerId,
+ *   pairInningsId, bowlingSpellId, bowlerId, strikerId, nonStrikerId,
  *   deliveryType: 'normal'|'wide'|'no_ball',
  *   zoneHit: 1|2|4|6|null,
  *   battersCrossed: boolean,
@@ -29,6 +29,7 @@ async function recordDelivery(req, res, next) {
   const {
     pairInningsId,
     bowlingSpellId,
+    bowlerId = null,
     strikerId,
     nonStrikerId,
     deliveryType = 'normal',
@@ -72,6 +73,44 @@ async function recordDelivery(req, res, next) {
 
   try {
     const result = await withTransaction(async (client) => {
+      const { rows: spellRows } = await client.query(
+        `SELECT id, bowler_id, activated_after_sequence, innings_id
+         FROM bowling_spell WHERE id = $1`,
+        [bowlingSpellId]
+      );
+      if (spellRows.length === 0 || spellRows[0].innings_id !== inningsId) {
+        throw Object.assign(new Error('Invalid bowling spell for this innings.'), { statusCode: 422 });
+      }
+      const spell = spellRows[0];
+
+      try {
+        validateBowlerSpellMatch({ bowlerId, spellBowlerId: spell.bowler_id });
+      } catch (err) {
+        if (err instanceof ScoringRuleError) {
+          throw Object.assign(new Error(err.message), { statusCode: 422 });
+        }
+        throw err;
+      }
+
+      const { rows: lastLegalRows } = await client.query(
+        `SELECT sequence_number, ball_number_in_over
+         FROM delivery
+         WHERE innings_id = $1 AND is_undone = false AND is_legal_delivery = true
+         ORDER BY sequence_number DESC LIMIT 1`,
+        [inningsId]
+      );
+      try {
+        validateBowlerActivatedForNewOver({
+          lastLegalDelivery: lastLegalRows[0] || null,
+          spellActivatedAfterSequence: spell.activated_after_sequence,
+        });
+      } catch (err) {
+        if (err instanceof ScoringRuleError) {
+          throw Object.assign(new Error(err.message), { statusCode: 422 });
+        }
+        throw err;
+      }
+
       // Determine next sequence number and over/ball position for this innings.
       const { rows: lastDelivery } = await client.query(
         `SELECT sequence_number, over_number, ball_number_in_over
@@ -216,7 +255,7 @@ async function recordDelivery(req, res, next) {
 
     res.status(201).json(result);
   } catch (err) {
-    if (err instanceof ScoringRuleError) {
+    if (err instanceof ScoringRuleError || err.statusCode === 422) {
       return res.status(422).json({ error: err.message });
     }
     next(err);

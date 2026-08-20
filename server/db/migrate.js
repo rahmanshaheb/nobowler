@@ -33,6 +33,16 @@ const MIGRATIONS = [
       `);
     },
   },
+  {
+    id: '2026-08-20_bowler_activation',
+    description: 'Require explicit bowler pick after each over (activated_after_sequence)',
+    async up(client) {
+      await client.query(`
+        ALTER TABLE bowling_spell
+        ADD COLUMN IF NOT EXISTS activated_after_sequence INTEGER NOT NULL DEFAULT 0
+      `);
+    },
+  },
 ];
 
 async function runMigrations() {

@@ -70,6 +70,8 @@ export default function RehydrateGate({ onResume, onNoMatch }) {
           totalOvers: totalOversForSquadSize(battingRoster.length),
           wideCountEnabled: data.wideCountEnabled !== false,
           resumeLastDeliveryId: data.lastDeliveryId ?? null,
+          resumeNeedsBowlerSelection: data.needsBowlerSelection ?? false,
+          resumeNeedsPairRotation: data.needsPairRotation ?? false,
         });
       })
       .catch((err) => {

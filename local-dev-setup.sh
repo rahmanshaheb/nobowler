@@ -8,23 +8,35 @@ cd "$PROJECT_DIR"
 
 echo "=== 1. Postgres ==="
 if ! command -v psql >/dev/null 2>&1; then
-  echo "Installing postgresql@16 via Homebrew..."
-  brew install postgresql@16
-  brew services start postgresql@16
+  echo "Installing postgresql@18 via Homebrew (needed for handover pg_dump restores)..."
+  brew install postgresql@18 || brew install postgresql@16
+  brew services start postgresql@18 2>/dev/null || brew services start postgresql@16
+  export PATH="/opt/homebrew/opt/postgresql@18/bin:/opt/homebrew/opt/postgresql@16/bin:$PATH"
   sleep 3
 fi
 
-createdb nobowlers 2>/dev/null && echo "Created database 'nobowlers'." || echo "Database 'nobowlers' already exists, continuing."
+export PATH="/opt/homebrew/opt/postgresql@18/bin:/opt/homebrew/opt/postgresql@16/bin:$PATH"
 
-echo "=== 2. Schema + migrations ==="
-psql nobowlers -f db/schema.sql
-psql nobowlers -f db/local_dev_migrations.sql
+HAS_DIR_DUMP=false
+if ls handover/database_dump_*.dir.tar.gz >/dev/null 2>&1 || ls *.dir.tar.gz >/dev/null 2>&1; then
+  HAS_DIR_DUMP=true
+fi
 
-read -p "Load real match history from handover export? [y/N] " LOAD_DATA
-if [[ "$LOAD_DATA" =~ ^[Yy]$ ]]; then
-  LATEST_EXPORT=$(ls -t handover/database_export_*.sql | head -1)
-  echo "Restoring $LATEST_EXPORT ..."
-  psql nobowlers -f "$LATEST_EXPORT"
+if [ "$HAS_DIR_DUMP" = true ]; then
+  read -p "Load real match history from handover pg_dump? [Y/n] " LOAD_DATA
+  LOAD_DATA="${LOAD_DATA:-Y}"
+else
+  read -p "Load real match history from handover export? [y/N] " LOAD_DATA
+fi
+
+if [[ "$LOAD_DATA" =~ ^[Yy]$|^[Yy][Ee][Ss]$|^$ ]]; then
+  echo "=== 2. Restore handover database ==="
+  bash server/scripts/restore-handover-db.sh
+else
+  echo "=== 2. Schema + migrations (empty database) ==="
+  createdb nobowlers 2>/dev/null && echo "Created database 'nobowlers'." || echo "Database 'nobowlers' already exists, continuing."
+  psql nobowlers -f db/schema.sql
+  psql nobowlers -f db/local_dev_migrations.sql
 fi
 
 echo "=== 3. Backend ==="

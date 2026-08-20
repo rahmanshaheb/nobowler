@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert');
-const { computeDelivery, ScoringRuleError, shouldRotateStrike } = require('./scoringEngine');
+const { computeDelivery, ScoringRuleError, shouldRotateStrike, validateBowlerActivatedForNewOver, validateBowlerSpellMatch } = require('./scoringEngine');
 
 // ---- Examples lifted directly from the design screenshots ----
 
@@ -260,4 +260,44 @@ test('Manual run on wide/no-ball is NOT a batter run (rule 13 exception)', () =>
   const wide = computeDelivery({ deliveryType: 'wide', zoneHit: null, battersCrossed: false, manualRunAdjustment: 1 });
   assert.strictEqual(wide.batterRuns, 0);
   assert.strictEqual(wide.extraRuns, 2); // mandatory(1) + manual(1)
+});
+
+test('Mid-over delivery skips bowler activation check', () => {
+  assert.doesNotThrow(() =>
+    validateBowlerActivatedForNewOver({
+      lastLegalDelivery: { sequence_number: 50, ball_number_in_over: 3 },
+      spellActivatedAfterSequence: 40,
+    })
+  );
+});
+
+test('New over rejects stale bowling spell (not re-selected after over complete)', () => {
+  assert.throws(
+    () =>
+      validateBowlerActivatedForNewOver({
+        lastLegalDelivery: { sequence_number: 112, ball_number_in_over: 6 },
+        spellActivatedAfterSequence: 72,
+      }),
+    ScoringRuleError
+  );
+});
+
+test('New over accepts spell picked after previous over finished', () => {
+  assert.doesNotThrow(() =>
+    validateBowlerActivatedForNewOver({
+      lastLegalDelivery: { sequence_number: 112, ball_number_in_over: 6 },
+      spellActivatedAfterSequence: 112,
+    })
+  );
+});
+
+test('Bowler id must match bowling spell row', () => {
+  assert.throws(
+    () =>
+      validateBowlerSpellMatch({
+        bowlerId: 'bowler-a',
+        spellBowlerId: 'bowler-b',
+      }),
+    ScoringRuleError
+  );
 });

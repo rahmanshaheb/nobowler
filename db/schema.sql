@@ -194,6 +194,7 @@ CREATE TABLE bowling_spell (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     innings_id      UUID NOT NULL REFERENCES innings(id) ON DELETE CASCADE,
     bowler_id       UUID NOT NULL REFERENCES match_player(id) ON DELETE CASCADE,
+    activated_after_sequence INTEGER NOT NULL DEFAULT 0,
     UNIQUE (innings_id, bowler_id) -- one spell aggregate per bowler per innings; overs tracked via deliveries
 );
 

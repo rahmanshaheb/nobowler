@@ -71,15 +71,18 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
   // genuinely new delivery is recorded.
   const [hasUndoneCurrentBall, setHasUndoneCurrentBall] = useState(false);
   const [isUndoing, setIsUndoing] = useState(false);
+  const [isSettingBowler, setIsSettingBowler] = useState(false);
   const [isSwapping, setIsSwapping] = useState(false);
   const [overDeliveries, setOverDeliveries] = useState([]); // ball-by-ball history for the CURRENT over's dot row — see the useEffect below for how this stays in sync
   const [errorMessage, setErrorMessage] = useState('');
-  const [bowlerPickerOpen, setBowlerPickerOpen] = useState(!bowlerId); // force the picker open immediately if no bowler chosen yet
+  const [bowlerPickerOpen, setBowlerPickerOpen] = useState(
+    !bowlerId && !matchContext.resumeNeedsBowlerSelection && !matchContext.resumeNeedsPairRotation
+  );
   const [bowlerOvers, setBowlerOvers] = useState({}); // { [bowlerId]: completedOvers } — refreshed each time the bowler picker opens
-  const [overCompleteAnimating, setOverCompleteAnimating] = useState(false);
-  const [pairRotationAnimating, setPairRotationAnimating] = useState(false);
+  const [overCompleteAnimating, setOverCompleteAnimating] = useState(matchContext.resumeNeedsBowlerSelection ?? false);
+  const [pairRotationAnimating, setPairRotationAnimating] = useState(matchContext.resumeNeedsPairRotation ?? false);
   const [pairPickerOpen, setPairPickerOpen] = useState(false);
-  const [atPairBoundary, setAtPairBoundary] = useState(false);
+  const [atPairBoundary, setAtPairBoundary] = useState(matchContext.resumeNeedsPairRotation ?? false);
   const [runOutStrikerPickerOpen, setRunOutStrikerPickerOpen] = useState(false);
   const [pendingBowlerOverlayAfterPair, setPendingBowlerOverlayAfterPair] = useState(false);
   const [bowlerOverlayIsPostPairRotation, setBowlerOverlayIsPostPairRotation] = useState(false);
@@ -107,6 +110,10 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
   const strikerName = battingRoster.find((p) => p.id === strikerId)?.display_name ?? '—';
   const nonStrikerName = battingRoster.find((p) => p.id === nonStrikerId)?.display_name ?? '—';
   const bowlerName = bowlingRoster.find((p) => p.id === bowlerId)?.display_name ?? 'Select bowler';
+  const canScore = Boolean(bowlerId && bowlingSpellId)
+    && !overCompleteAnimating
+    && !pairRotationAnimating
+    && !isSettingBowler;
 
   const fieldingTeamPlayers = bowlingRoster
     .map((p) => ({ id: p.id, name: p.display_name }))
@@ -183,16 +190,22 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
 
   const handleSubmit = useCallback(
     async (ballInput) => {
-      if (!bowlingSpellId) {
+      if (!bowlingSpellId || !bowlerId) {
         setErrorMessage('Select a bowler before scoring the first ball.');
         openBowlerPickerWithOvers();
         throw new Error('No bowler selected');
+      }
+      if (overCompleteAnimating || pairRotationAnimating || isSettingBowler) {
+        setErrorMessage('Select a bowler for the new over before scoring.');
+        openBowlerPickerWithOvers();
+        throw new Error('Bowler selection required');
       }
       setErrorMessage('');
       try {
         const delivery = await api.post(`/innings/${inningsId}/deliveries`, {
           pairInningsId,
           bowlingSpellId,
+          bowlerId,
           strikerId,
           nonStrikerId,
           deliveryType: ballInput.deliveryType,
@@ -240,6 +253,23 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
 
         if (completedAnOver) {
           const oversJustCompleted = Number(delivery.over_number) + 1;
+          // Clear the bowler the instant the over finishes — before any
+          // overlay or picker step — so the next delivery cannot silently
+          // attach to the previous bowler's spell (which was inflating
+          // over counts when the scorer picked someone new visually but
+          // bowlingSpellId still pointed at the old bowler).
+          setBowlerId(null);
+          setBowlingSpellId(null);
+          api.get(`/matches/${matchContext.matchId}/innings/${inningsId}/bowler-overs`)
+            .then((overs) => {
+              const map = {};
+              overs.forEach((o) => {
+                map[o.bowlerId] = { completedOvers: o.completedOvers, ballsIntoCurrentOver: o.ballsIntoCurrentOver };
+              });
+              setBowlerOvers(map);
+            })
+            .catch(() => {});
+
           // Innings-end takes priority over everything else that could
           // also be true on this exact ball — including the 4-over pair
           // rotation, since totalOvers (16/20/24) is always itself a
@@ -282,18 +312,6 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
             // triggers afterward, once the scorer confirms their pair
             // choice (see the pairRotationAnimating overlay below) —
             // not simultaneously with this one.
-            //
-            // The bowler IS cleared right here though, at the trigger
-            // moment — not later, when the pair step is confirmed.
-            // Confirmed explicitly: this prevents a real edge case
-            // where closing the pair-rotation picker early (without
-            // choosing) would otherwise leave the just-finished
-            // over's bowler silently still "selected," reintroducing
-            // the exact stale-bowler bug fixed earlier today, just via
-            // this new path which never reaches the bowler overlay's
-            // own clearing logic at all if the scorer bails out early.
-            setBowlerId(null);
-            setBowlingSpellId(null);
             setAtPairBoundary(true);
             setPairRotationAnimating(true);
           } else {
@@ -306,11 +324,18 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
           }
         }
       } catch (err) {
-        setErrorMessage(err.message || 'Failed to submit delivery.');
+        const message = err.message || 'Failed to submit delivery.';
+        setErrorMessage(message);
+        if (/select a bowler|bowler selection/i.test(message)) {
+          setBowlerId(null);
+          setBowlingSpellId(null);
+          setOverCompleteAnimating(false);
+          openBowlerPickerWithOvers();
+        }
         throw err;
       }
     },
-    [inningsId, pairInningsId, bowlingSpellId, strikerId, nonStrikerId, openBowlerPickerWithOvers, totalOvers, confirmEndInnings, wideCountEnabled]
+    [inningsId, pairInningsId, bowlingSpellId, bowlerId, strikerId, nonStrikerId, openBowlerPickerWithOvers, totalOvers, confirmEndInnings, wideCountEnabled, overCompleteAnimating, pairRotationAnimating, isSettingBowler]
   );
 
   const handleUndo = useCallback(async () => {
@@ -353,18 +378,31 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
       setAtPairBoundary(false);
       setPendingBowlerOverlayAfterPair(false);
 
-      // Restore whichever bowler was actually bowling at the point now
-      // being undone to. This matters specifically when undoing the ball
-      // that completed an over: the picker may already have a NEW bowler
-      // selected (or no bowler at all, mid-pick) for the over that no
-      // longer exists once undone. Without this, the next delivery would
-      // get recorded under the wrong bowling_spell_id, corrupting both
-      // bowlers' over counts (see the "0.5 instead of 1.0" bug). A null
-      // current_bowler_id means the innings' very first ball was undone —
-      // there's genuinely no bowler yet, so fall back to the picker.
-      if (undoResult.current_bowler_id) {
-        setBowlerId(undoResult.current_bowler_id);
-        setBowlingSpellId(undoResult.current_bowling_spell_id);
+      const lastBall = Number(liveState.last_ball_number ?? 0);
+      const atOverBoundary = lastBall >= 6;
+
+      // After undo, if the innings is back at an over boundary (ball 6
+      // just bowled), force a fresh bowler pick — same as when the over
+      // first completed. Restoring the previous over's bowler here would
+      // leave a stale activated_after_sequence and invite the wrong spell
+      // on the next over (the exact bug this fix targets).
+      if (atOverBoundary) {
+        setBowlerId(null);
+        setBowlingSpellId(null);
+        setOverCompleteAnimating(true);
+        setBowlerPickerOpen(false);
+      } else if (undoResult.current_bowler_id) {
+        try {
+          const spell = await api.post(
+            `/matches/${matchContext.matchId}/innings/${inningsId}/bowling-spells`,
+            { bowlerId: undoResult.current_bowler_id }
+          );
+          setBowlerId(undoResult.current_bowler_id);
+          setBowlingSpellId(spell.id);
+        } catch {
+          setBowlerId(undoResult.current_bowler_id);
+          setBowlingSpellId(undoResult.current_bowling_spell_id);
+        }
         setOverCompleteAnimating(false);
         setBowlerPickerOpen(false);
       } else if (bowlerId) {
@@ -392,6 +430,7 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
 
   async function handleBowlerChosen({ id }) {
     setErrorMessage('');
+    setIsSettingBowler(true);
     try {
       const spell = await api.post(`/matches/${matchContext.matchId}/innings/${inningsId}/bowling-spells`, {
         bowlerId: id,
@@ -399,8 +438,12 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
       setBowlerId(id);
       setBowlingSpellId(spell.id);
       setBowlerPickerOpen(false);
+      setOverCompleteAnimating(false);
+      setBowlerOverlayIsPostPairRotation(false);
     } catch (err) {
       setErrorMessage(err.message || 'Failed to set bowler.');
+    } finally {
+      setIsSettingBowler(false);
     }
   }
 
@@ -634,7 +677,7 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
       )}
       <ScoringScreen
         matchState={{ overNumber, ballNumberInOver, runs, totalOvers, overDeliveries, battingTeamName: battingTeam === 'A' ? (teamAName || 'Team A') : (teamBName || 'Team B'), inningsNumber, targetRuns: inningsNumber === 2 ? innings1Runs : null }}
-        pair={{ pairNumber, strikerName, nonStrikerName, bowlerName, strikerId, nonStrikerId, bowlerId, hasBowler: Boolean(bowlerId) }}
+        pair={{ pairNumber, strikerName, nonStrikerName, bowlerName, strikerId, nonStrikerId, bowlerId, hasBowler: canScore }}
         fieldingTeamPlayers={fieldingTeamPlayers}
         scorerCount={1}
         canUndo={Boolean(lastDeliveryId) && !isUndoing && !hasUndoneCurrentBall}
@@ -823,9 +866,23 @@ export default function LiveMatchContainer({ matchContext, onReturnHome }) {
               setLastDeliveryId(undoResult.prev_delivery_id ?? null);
               setHasUndoneCurrentBall(true);
               setInnings1LastDeliveryId(null);
-              if (undoResult.current_bowler_id) {
-                setBowlerId(undoResult.current_bowler_id);
-                setBowlingSpellId(undoResult.current_bowling_spell_id);
+              const lastBall = Number(liveState.last_ball_number ?? 0);
+              if (lastBall >= 6) {
+                setBowlerId(null);
+                setBowlingSpellId(null);
+                setOverCompleteAnimating(true);
+              } else if (undoResult.current_bowler_id) {
+                try {
+                  const spell = await api.post(
+                    `/matches/${matchContext.matchId}/innings/${inningsId}/bowling-spells`,
+                    { bowlerId: undoResult.current_bowler_id }
+                  );
+                  setBowlerId(undoResult.current_bowler_id);
+                  setBowlingSpellId(spell.id);
+                } catch {
+                  setBowlerId(undoResult.current_bowler_id);
+                  setBowlingSpellId(undoResult.current_bowling_spell_id);
+                }
               }
               setPairInningsId(undoResult.pair_innings_id);
               if (undoResult.current_pair_number != null) setPairNumber(undoResult.current_pair_number);

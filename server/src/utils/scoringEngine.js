@@ -270,6 +270,35 @@ function validateBowlerOverLimit(legalBallsAlreadyBowled) {
 }
 
 /**
+ * After a legal delivery completes an over (ball 6), the scorer must
+ * explicitly pick the next bowler (POST bowling-spells) before ANY further
+ * delivery — legal or extra — is accepted. Without this, a stale
+ * bowling_spell_id from the previous over silently credits the wrong bowler.
+ *
+ * @param {{ sequence_number: number, ball_number_in_over: number }|null} lastLegalDelivery
+ * @param {number} spellActivatedAfterSequence — set when the bowler was last picked
+ */
+function validateBowlerActivatedForNewOver({ lastLegalDelivery, spellActivatedAfterSequence }) {
+  if (!lastLegalDelivery || lastLegalDelivery.ball_number_in_over < 6) return;
+  if (spellActivatedAfterSequence < lastLegalDelivery.sequence_number) {
+    throw new ScoringRuleError(
+      'Select a bowler for the new over before scoring the next ball.'
+    );
+  }
+}
+
+/**
+ * Ensures the client-visible bowler matches the spell row being written to.
+ */
+function validateBowlerSpellMatch({ bowlerId, spellBowlerId }) {
+  if (bowlerId && spellBowlerId && bowlerId !== spellBowlerId) {
+    throw new ScoringRuleError(
+      'Bowler selection is out of date — pick the bowler again.'
+    );
+  }
+}
+
+/**
  * Total overs in an innings, derived from how many players are on the
  * BATTING team's roster. Each pair bats 4 overs; pair count is
  * ceil(squadSize / 2) — odd squads re-use a player to fill the last pair
@@ -292,6 +321,8 @@ module.exports = {
   computeDelivery,
   shouldRotateStrike,
   validateBowlerOverLimit,
+  validateBowlerActivatedForNewOver,
+  validateBowlerSpellMatch,
   totalOversForSquadSize,
   BOWLER_CREDITED_WICKET_TYPES,
 };

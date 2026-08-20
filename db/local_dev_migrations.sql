@@ -83,3 +83,6 @@ GROUP BY mp.id, mp.match_id, mp.display_name, mp.team;
 -- in schema.sql (dropped at some point, export script never updated).
 -- Always NULL in the dump, unreferenced anywhere in app code.
 ALTER TABLE match ADD COLUMN IF NOT EXISTS active_scorer_token TEXT;
+
+-- Bowler must be re-selected after each over completes (prevents stale spell IDs).
+ALTER TABLE bowling_spell ADD COLUMN IF NOT EXISTS activated_after_sequence INTEGER NOT NULL DEFAULT 0;

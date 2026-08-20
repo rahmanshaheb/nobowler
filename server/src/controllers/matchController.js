@@ -1,5 +1,6 @@
 // matchController.js
 const { pool, withTransaction } = require('../db/pool');
+const { totalOversForSquadSize } = require('../utils/scoringEngine');
 
 /**
  * POST /api/matches
@@ -350,9 +351,15 @@ async function startOrGetBowlingSpell(req, res, next) {
   }
   try {
     const { rows } = await pool.query(
-      `INSERT INTO bowling_spell (innings_id, bowler_id)
-       VALUES ($1, $2)
-       ON CONFLICT (innings_id, bowler_id) DO UPDATE SET innings_id = EXCLUDED.innings_id
+      `INSERT INTO bowling_spell (innings_id, bowler_id, activated_after_sequence)
+       VALUES (
+         $1, $2,
+         (SELECT COALESCE(MAX(sequence_number), 0)
+          FROM delivery
+          WHERE innings_id = $1 AND is_undone = false)
+       )
+       ON CONFLICT (innings_id, bowler_id) DO UPDATE SET
+         activated_after_sequence = EXCLUDED.activated_after_sequence
        RETURNING *`,
       [inningsId, bowlerId]
     );
@@ -432,26 +439,51 @@ async function rehydrateMatch(req, res, next) {
     );
     const pair = pairRows[0] || null;
 
-    // Most recent bowling spell actually used in this innings (not just
-    // created — a spell row can exist without a delivery if the scorer
-    // picked a bowler but hasn't submitted a ball yet, so check both).
-    const { rows: bowlerFromDelivery } = await pool.query(
-      `SELECT bs.id AS bowling_spell_id, bs.bowler_id
+    const battingRoster = innings.batting_team === 'A' ? teamAPlayers : teamBPlayers;
+
+    // Derive the active bowler from the last LEGAL delivery — not the
+    // last ledger row overall (which may be a wide/no-ball between overs).
+    // When that legal delivery completed an over (ball 6), leave bowler
+    // unset so a refresh cannot resume with a stale bowling_spell_id and
+    // silently credit the next over to the wrong bowler.
+    const { rows: lastLegalRows } = await pool.query(
+      `SELECT bs.id AS bowling_spell_id, bs.bowler_id, d.over_number, d.ball_number_in_over
        FROM delivery d
        JOIN bowling_spell bs ON bs.id = d.bowling_spell_id
-       WHERE d.innings_id = $1 AND d.is_undone = false
+       WHERE d.innings_id = $1 AND d.is_undone = false AND d.is_legal_delivery = true
        ORDER BY d.sequence_number DESC
        LIMIT 1`,
       [innings.id]
     );
-    let bowlingSpellId = bowlerFromDelivery[0]?.bowling_spell_id ?? null;
-    let bowlerId = bowlerFromDelivery[0]?.bowler_id ?? null;
-    if (!bowlingSpellId) {
-      // No delivery yet this innings — check for a spell picked but not
-      // yet used (e.g. scorer selected a bowler, then refreshed before
-      // the first ball).
+
+    let bowlingSpellId = null;
+    let bowlerId = null;
+    let needsBowlerSelection = false;
+    let needsPairRotation = false;
+
+    if (lastLegalRows.length > 0) {
+      const lastLegal = lastLegalRows[0];
+      if (lastLegal.ball_number_in_over >= 6) {
+        const oversJustCompleted = lastLegal.over_number + 1;
+        const totalOvers = totalOversForSquadSize(battingRoster.length);
+        needsPairRotation = oversJustCompleted % 4 === 0 && oversJustCompleted < totalOvers;
+        needsBowlerSelection = !needsPairRotation;
+      } else {
+        bowlingSpellId = lastLegal.bowling_spell_id;
+        bowlerId = lastLegal.bowler_id;
+      }
+    } else {
+      // No legal ball yet — restore a bowler picked before the first
+      // delivery (e.g. scorer selected one, then refreshed).
       const { rows: spellRows } = await pool.query(
-        'SELECT id, bowler_id FROM bowling_spell WHERE innings_id = $1 LIMIT 1',
+        `SELECT bs.id, bs.bowler_id
+         FROM bowling_spell bs
+         WHERE bs.innings_id = $1
+           AND NOT EXISTS (
+             SELECT 1 FROM delivery d
+             WHERE d.bowling_spell_id = bs.id AND d.is_undone = false
+           )
+         LIMIT 1`,
         [innings.id]
       );
       if (spellRows.length > 0) {
@@ -459,8 +491,6 @@ async function rehydrateMatch(req, res, next) {
         bowlerId = spellRows[0].bowler_id;
       }
     }
-
-    const battingRoster = innings.batting_team === 'A' ? teamAPlayers : teamBPlayers;
     const bowlingRoster = innings.batting_team === 'A' ? teamBPlayers : teamAPlayers;
 
     // Get last delivery ID for undo support on refresh
@@ -504,6 +534,8 @@ async function rehydrateMatch(req, res, next) {
       bowlingRoster,
       wideCountEnabled: match.wide_count_enabled !== false,
       lastDeliveryId,
+      needsBowlerSelection,
+      needsPairRotation,
     });
   } catch (err) {
     next(err);
@@ -518,14 +550,10 @@ async function rehydrateMatch(req, res, next) {
  * displayed as "0.3"; 8 legal balls -> {completedOvers: 1, ballsIntoCurrentOver: 2},
  * displayed as "1.2").
  *
- * Confirmed explicitly: this needs to show FRACTIONAL progress, not just
- * whole completed overs — a bowler can be swapped out mid-over (e.g.
- * after 3 balls) and back in later, and the 3-over cap (rule 15) applies
- * to their TOTAL legal balls bowled across every time they've bowled in
- * this innings. Since bowling_spell has UNIQUE(innings_id, bowler_id),
- * a returning bowler's deliveries all accumulate under the SAME spell
- * row automatically — no special handling needed here for "multiple
- * stints," this query already sums correctly across all of them.
+ * Counts TOTAL legal balls per bowler across the whole innings (same
+ * basis as the 3-over cap in validateBowlerOverLimit), not completed
+ * over_number groups — a bowler returning for a later spell accumulates
+ * correctly on their single bowling_spell row.
  *
  * Only includes bowlers who've bowled at least one legal ball; a bowler
  * who hasn't bowled at all simply won't appear in the result, which the
@@ -535,27 +563,24 @@ async function getBowlerOvers(req, res, next) {
   const { inningsId } = req.params;
   try {
     const { rows } = await pool.query(
-      `SELECT over_counts.bowler_id,
-         COUNT(*) FILTER (WHERE legal_in_over = 6) AS completed_overs,
-         MAX(CASE WHEN legal_in_over < 6 THEN legal_in_over ELSE 0 END) AS balls_in_incomplete_over
-       FROM (
-         SELECT bs.bowler_id, d.over_number,
-           COUNT(d.id) FILTER (WHERE d.is_legal_delivery = true) AS legal_in_over
-         FROM bowling_spell bs
-         LEFT JOIN delivery d ON d.bowling_spell_id = bs.id AND d.is_undone = false
-         WHERE bs.innings_id = $1
-         GROUP BY bs.bowler_id, d.over_number
-       ) over_counts
-       GROUP BY over_counts.bowler_id
-       HAVING COUNT(*) FILTER (WHERE legal_in_over > 0) > 0`,
+      `SELECT bs.bowler_id,
+         COUNT(d.id) FILTER (WHERE d.is_legal_delivery = true) AS total_legal_balls
+       FROM bowling_spell bs
+       LEFT JOIN delivery d ON d.bowling_spell_id = bs.id AND d.is_undone = false
+       WHERE bs.innings_id = $1
+       GROUP BY bs.bowler_id
+       HAVING COUNT(d.id) FILTER (WHERE d.is_legal_delivery = true) > 0`,
       [inningsId]
     );
     res.json(
-      rows.map((r) => ({
-        bowlerId: r.bowler_id,
-        completedOvers: parseInt(r.completed_overs || 0, 10),
-        ballsIntoCurrentOver: parseInt(r.balls_in_incomplete_over || 0, 10),
-      }))
+      rows.map((r) => {
+        const totalLegal = parseInt(r.total_legal_balls || 0, 10);
+        return {
+          bowlerId: r.bowler_id,
+          completedOvers: Math.floor(totalLegal / 6),
+          ballsIntoCurrentOver: totalLegal % 6,
+        };
+      })
     );
   } catch (err) {
     next(err);

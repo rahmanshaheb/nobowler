@@ -14,7 +14,17 @@ web/       React (Vite) frontend — currently just the live scoring screen
 ## Local setup
 
 ### 1. Database
-Run `db/schema.sql` against a Postgres instance (local or hosted).
+Quick start (schema + optional real match data):
+```bash
+bash local-dev-setup.sh
+```
+
+Or manually:
+```bash
+bash server/scripts/restore-handover-db.sh   # uses handover/database_dump_*.dir.tar.gz if present
+# legacy fallback: db/schema.sql + handover/database_export_*.sql
+```
+Directory dumps need `brew install postgresql@18` for `pg_restore` (works on PostgreSQL 16 servers).
 
 ### 2. Backend
 ```

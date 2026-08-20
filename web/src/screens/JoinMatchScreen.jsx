@@ -69,6 +69,8 @@ onJoined, onBack }) {
         totalOvers: totalOversForSquadSize(data.battingRoster.length),
         wideCountEnabled: data.wideCountEnabled !== false,
         resumeLastDeliveryId: data.lastDeliveryId ?? null,
+        resumeNeedsBowlerSelection: data.needsBowlerSelection ?? false,
+        resumeNeedsPairRotation: data.needsPairRotation ?? false,
       });
     } catch (err) {
       setError(err.message || 'Could not find that match. Check the ID and try again.');

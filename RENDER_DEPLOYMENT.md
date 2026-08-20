@@ -42,10 +42,14 @@ _Written July 2026, matches the current repo structure (`db/`, `server/`, `web/`
    like `v_bowling_stats` bowler wicket credit are applied on Render
    without manual psql. You only need the psql steps above for a brand-new
    database before the first deploy.
-5. Optional: restore real match history:
+5. Optional: restore real match history locally, then push to Render:
+   ```bash
+   export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"
+   DB_NAME=nobowlers bash server/scripts/restore-handover-db.sh
+   pg_dump "<External Database URL>" ...   # or use Render backup/restore in dashboard
    ```
-   psql "<External Database URL>" -f handover/database_export_2026-07-09.sql
-   ```
+   Preferred handover file: `handover/database_dump_2026-08-20.dir.tar.gz` (pg_dump -Fd).
+   Legacy SQL export: `handover/database_export_2026-07-09.sql`
 
 ---
 
